@@ -1,0 +1,75 @@
+/* Featured Products */
+
+
+/* Product container */
+#fpslider .item{
+	text-align: center;
+}
+
+
+/* Product image container */
+#fpslider .item .image{
+
+}
+/* Product image link */
+#fpslider .item .image a{
+	text-decoration: none;
+}
+/* Product image */
+#fpslider .item .image a img{
+
+}
+
+
+/* Product Title */
+#fpslider .item .name a {
+	color: #333;
+	/* Use set line-height from .item to set a break for long titles */
+	height: 15px;
+	/* The just keeps things from overflowing */
+	overflow: hidden;
+	-o-text-overflow: ellipsis-word;
+	-ms-text-overflow: ellipsis-word;
+	text-overflow: ellipsis-word;
+}
+
+/* Product price */
+#fpslider .item .price {
+	color: #333;
+}
+
+/* The priceBefore text */
+#fpslider .item .pricetext {
+	color: #c00;
+}
+
+/* The sale price */
+#fpslider .item .sale {
+	color: #c00;
+}
+
+/* the saleBefore text */
+#fpslider .item .saletext {
+	color: #c00;
+}
+
+/* the 'Shop Now' button */
+#fpslider .button {
+	background-color: black;
+	border-radius: 5px;
+	color: white;
+	display: block;
+	margin: 5px auto;
+	padding: 5px 10px;
+	text-decoration: none;
+	width: 50%;
+}
+
+#fpslider .button:hover {
+	background-color: gray;
+}
+
+/* The description - hidden by default in JS */
+#fpslider .item .desc {
+
+}

@@ -1,0 +1,67 @@
+.vnav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vnav__item {
+  position: relative;
+}
+.vnav__item:hover {
+  background: #ccc;
+}
+.vnav__item:hover > .vnav__subnav {
+  display: block;
+}
+.vnav__link {
+  display: block;
+  padding: 10px 25px;
+  color: #666;
+  text-decoration: none;
+  text-align: center;
+}
+.vnav__link--active {
+  background: #ccc;
+}
+.vnav__subnav {
+  display: none;
+  background: #ddd;
+  position: absolute;
+  z-index: 1;
+}
+.vnav__subnav .vnav__item {
+  display: block;
+}
+.vnav__subnav .vnav__link {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #666;
+  white-space: nowrap;
+}
+.vnav--level1 {
+  position: relative;
+  display: inline-table;
+}
+.vnav--level1 > .vnav__item {
+  display: inline-block;
+  vertical-align: middle;
+  *vertical-align: auto;
+  *zoom: 1;
+  *display: inline;
+}
+.vnav--horizontal .vnav__subnav {
+  left: 0;
+  top: 100%;
+}
+.vnav--horizontal .vnav--level3,
+.vnav--horizontal .vnav--level4 {
+  left: 100%;
+  top: 0;
+}
+.vnav--vertical .vnav__item {
+  display: block;
+}
+.vnav--vertical .vnav__subnav {
+  left: 100%;
+  top: 0px;
+}
