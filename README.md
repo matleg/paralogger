@@ -15,10 +15,13 @@ pip install pyulog
 conda install -c conda-forge pyulog
 conda install pandas
 conda install -c bokeh bokeh
-conda install -c anaconda scipy
+conda install -c anaconda scipy.
+conda install -c conda-forge matplotlib 
 
 autre:
 conda install -c conda-forge pyfftw
+conda install -c conda-forge simplekml
+conda install -c mikesilva smopy
 
 
 

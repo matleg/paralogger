@@ -7,102 +7,66 @@ from __future__ import print_function
 
 import argparse
 import sys
-
-from pyulog import ULog
+from pyulog import *
+from pyulog.px4 import PX4ULog
 #pylint: disable=unused-variable, too-many-branches
 
-def main():
-    """Commande line interface"""
 
-    parser = argparse.ArgumentParser(description='Extract parameters from an ULog file')
-    parser.add_argument('filename', metavar='file.ulg', help='ULog input file')
+def load_ulog_file(file_name):
+    """ load an ULog file
+    :return: ULog object
+    """
+    # The reason to put this method into helper is that the main module gets
+    # (re)loaded on each page request. Thus the caching would not work there.
 
-    parser.add_argument('-d', '--delimiter', dest='delimiter', action='store',
-                        help='Use delimiter in CSV (default is \',\')', default=',')
+    # load only the messages we really need
+    msg_filter = ['battery_status', 'distance_sensor', 'estimator_status',
+                  'sensor_combined', 'cpuload',
+                  'vehicle_gps_position', 'vehicle_local_position',
+                  'vehicle_local_position_setpoint',
+                  'vehicle_global_position', 'actuator_controls_0',
+                  'actuator_controls_1', 'actuator_outputs',
+                  'vehicle_angular_velocity', 'vehicle_attitude', 'vehicle_attitude_setpoint',
+                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
+                  'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
+                  'vehicle_local_position_groundtruth', 'vehicle_visual_odometry',
+                  'vehicle_status', 'airspeed', 'manual_control_setpoint',
+                  'rate_ctrl_status', 'vehicle_air_data',
+                  'vehicle_magnetometer', 'system_power', 'tecs_status']
+    try:
+        ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
+    except FileNotFoundError:
+        print("Error: file %s not found" % file_name)
+        raise
 
-    parser.add_argument('-i', '--initial', dest='initial', action='store_true',
-                        help='Only extract initial parameters', default=False)
+    # catch all other exceptions and turn them into an ULogException
+    except Exception as error:
+        traceback.print_exception(*sys.exc_info())
+        raise ULogException()
 
-    parser.add_argument('-o', '--octave', dest='octave', action='store_true',
-                        help='Use Octave format', default=False)
+    # filter messages with timestamp = 0 (these are invalid).
+    # The better way is not to publish such messages in the first place, and fix
+    # the code instead (it goes against the monotonicity requirement of ulog).
+    # So we display the values such that the problem becomes visible.
+#    for d in ulog.data_list:
+#        t = d.data['timestamp']
+#        non_zero_indices = t != 0
+#        if not np.all(non_zero_indices):
+#            d.data = np.compress(non_zero_indices, d.data, axis=0)
 
-    parser.add_argument('-t', '--timestamps', dest='timestamps', action='store_true',
-                        help='Extract changed parameters with timestamps', default=False)
+    return ulog
 
-    parser.add_argument('output_filename', metavar='params.txt',
-                        type=argparse.FileType('w'), nargs='?',
-                        help='Output filename (default=stdout)', default=sys.stdout)
+ulog_file_name = 'log_0_2019-9-14-21-54-24.ulg'
 
-    parser.add_argument('--ignore', dest='ignore', action='store_true',
-                        help='Ignore string parsing exceptions', default=False)
+ulog = load_ulog_file(ulog_file_name)
+px4_ulog = PX4ULog(ulog)
+px4_ulog.add_roll_pitch_yaw()
 
-    args = parser.parse_args()
-    ulog_file_name = args.filename
-    disable_str_exceptions = args.ignore
+vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+timestamp = vehicle_attitude.data['timestamp']
+pitch = vehicle_attitude.data['pitch']
 
-    message_filter = []
-    if not args.initial: message_filter = None
-
-    ulog = ULog(ulog_file_name, message_filter, disable_str_exceptions)
-
-    param_keys = sorted(ulog.initial_parameters.keys())
-    delimiter = args.delimiter
-    output_file = args.output_filename
-
-    if not args.octave:
-        for param_key in param_keys:
-            output_file.write(param_key)
-            if args.timestamps:
-                output_file.write(delimiter)
-                output_file.write(str(ulog.initial_parameters[param_key]))
-                for t, name, value in ulog.changed_parameters:
-                    if name == param_key:
-                        output_file.write(delimiter)
-                        output_file.write(str(value))
-
-                output_file.write('\n')
-                output_file.write("timestamp")
-                output_file.write(delimiter)
-                output_file.write('0')
-                for t, name, value in ulog.changed_parameters:
-                    if name == param_key:
-                        output_file.write(delimiter)
-                        output_file.write(str(t))
-
-                output_file.write('\n')
-            else:
-                output_file.write(delimiter)
-                output_file.write(str(ulog.initial_parameters[param_key]))
-                if not args.initial:
-                    for t, name, value in ulog.changed_parameters:
-                        if name == param_key:
-                            output_file.write(delimiter)
-                            output_file.write(str(value))
-                output_file.write('\n')
-
-    else:
-
-        for param_key in param_keys:
-            output_file.write('# name ')
-            output_file.write(param_key)
-            values = [ulog.initial_parameters[param_key]]
-
-            if not args.initial:
-                for t, name, value in ulog.changed_parameters:
-                    if name == param_key:
-                        values += [value]
-
-            if len(values) > 1:
-                output_file.write('\n# type: matrix\n')
-                output_file.write('# rows: 1\n')
-                output_file.write('# columns: ')
-                output_file.write(str(len(values)) + '\n')
-                for value in values:
-                    output_file.write(str(value) + ' ')
-
-            else:
-                output_file.write('\n# type: scalar\n')
-                output_file.write(str(values[0]))
-
-            output_file.write('\n')
-
+print("timestamp")
+print(timestamp)
+print("pitch")
+print(pitch)
