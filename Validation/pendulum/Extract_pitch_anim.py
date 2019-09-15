@@ -123,8 +123,8 @@ print(df )
 print("Creating df animation ... ")
 
 #Plot Pitch
-#df.plot(x='timestamp_0', y='pitch', marker='.')
-#plt.show()
+df.plot(x='timestamp_0', y='pitch', marker='.')
+plt.show()
 
 # ## PLOT WITH BOKEH
 
@@ -142,28 +142,46 @@ df_anim=df.copy()
 
 df_anim['x'] = length * np.sin(df_anim.pitch) 
 df_anim['y'] = length * np.cos(df_anim.pitch) 
+df_anim['timestamp_nano'] = df_anim.timestamp*1000 
+df_anim['timestamp_milli'] = np.rint((df_anim.timestamp_0))
+
+
+
+df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_nano'])
+df_anim = df_anim.set_index('Datetime')
 
 print(df_anim)
+df_anim_r = df_anim.resample('1S').first()
+
+print("resampling")
+print(df_anim_r)
 
 print("Ploting ... ")
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 
+start = 70
+end = start + 150
 
 fig = plt.figure()
-x = df_anim['x']
-y = df_anim['y']
-t = df_anim['timestamp']
+x = df_anim_r['x'][start:end].reset_index(drop=True).to_string(index=False)
 
-
+y = df_anim_r['y'][start:end].reset_index(drop=True).to_string(index=False)
+t = df_anim_r['timestamp_milli'][start:end].reset_index(drop=True)
+t = [(t[i] - t[0]) for i in range(len(t))] 
 # x=[20,23,25,27,29,31]
 # y=[10,12,14,16,17,19]
 # t=[2,9,1,4,3,9]
 
+print('t: ', t)
+print('x: ', x)
+print('y: ', y)
+
 #create index list for frames, i.e. how many cycles each frame will be displayed
 frame_t = []
 for i, item in enumerate(t):
-    frame_t.extend([i] * item)
+    frame_t.extend([i] *(item))   # TODO : to understand !!
+    
 
 def init():
     fig.clear()
@@ -171,14 +189,14 @@ def init():
 #animation function
 def animate(i): 
     #prevent autoscaling of figure
-    plt.xlim(15, 35)
-    plt.ylim( 5, 25)
+
     #set new point
+    print("plot i:" + str(i)+" x:" + str(x[i])+ "  y:" + str(y[i]))
     plt.scatter(x[i], y[i], c = "b")
 
 #animate scatter plot
 ani = anim.FuncAnimation(fig, animate, init_func = init, 
-                         frames = frame_t, interval = 100, repeat = True)
+                         frames = frame_t, interval = 1, repeat = True)
 plt.show()
 
 ############################################
