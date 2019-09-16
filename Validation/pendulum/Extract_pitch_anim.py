@@ -150,3 +150,5 @@ p = gridplot([[left, right]])
 
 show(p)
 
+
+### ANIMATION
