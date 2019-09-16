@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import ColumnDataSource
+from bokeh.layouts import gridplot
 
 from functools import lru_cache
 #pylint: disable=unused-variable, too-many-branches
@@ -101,7 +102,7 @@ px4_ulog = PX4ULog(ulog)
 px4_ulog.add_roll_pitch_yaw()
 
 vehicle_attitude = ulog.get_dataset('vehicle_attitude')
-timestamp = vehicle_attitude.data['timestamp']
+timestamp = vehicle_attitude.data['timestamp']  # in microsecond
 timestamp_0 = [(timestamp[i] - timestamp[0])/1000000 for i in range(len(timestamp))] # Divide  by 10E6  micro second to second
 pitch = vehicle_attitude.data['pitch']
 roll = vehicle_attitude.data['roll']
@@ -115,165 +116,37 @@ data = {'timestamp':timestamp, 'timestamp_0':timestamp_0,'pitch':pitch, 'roll':r
   
 # Create DataFrame 
 df = pd.DataFrame(data) 
+df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz
   
 # Print the output. 
 print(df )
 
 
-print("Creating df animation ... ")
+print("Plotting ... ")
 
-#Plot Pitch
-df.plot(x='timestamp_0', y='pitch', marker='.')
+## PLOT WITH MATPLOTLIB
+#Plot Pitch and roll
+df.plot(x='timestamp_0', y='pitch', marker='.',title="Pitch[rad] /time0")
+df.plot(x='timestamp_0', y='roll', marker='.',title="Roll[rad] /time0")
+#plt.show()
+
+#Plot Histogram delay_log.
+df.hist(column='delay_log',bins=200, range=(3900, 4100))
 plt.show()
 
-# ## PLOT WITH BOKEH
+# ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
 
-# source = ColumnDataSource(df)
-# p = figure()
-# p.circle(x='timestamp_0', y='pitch', source=source)
+source = ColumnDataSource(df)
 
-# show(p)
+# create a new plot and add a renderer
+left = figure( title="Pitch[rad]/time0")
+left.circle(x='timestamp_0', y='pitch', source=source)
 
-###  ANIMATION ###
-length= 1
+# create another new plot and add a renderer
+right = figure(  title='Roll[rad]/time0')
+right.circle(x='timestamp_0', y='roll', source=source)
 
-df_anim=df.copy()
+p = gridplot([[left, right]])
 
+show(p)
 
-df_anim['x'] = length * np.sin(df_anim.pitch) 
-df_anim['y'] = length * np.cos(df_anim.pitch) 
-df_anim['timestamp_nano'] = df_anim.timestamp*1000 
-df_anim['timestamp_milli'] = np.rint((df_anim.timestamp_0))
-
-
-
-df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_nano'])
-df_anim = df_anim.set_index('Datetime')
-
-print(df_anim)
-df_anim_r = df_anim.resample('1S').first()
-
-print("resampling")
-print(df_anim_r)
-
-print("Ploting ... ")
-import matplotlib.pyplot as plt
-import matplotlib.animation as anim
-
-start = 70
-end = start + 150
-
-fig = plt.figure()
-x = df_anim_r['x'][start:end].reset_index(drop=True).to_string(index=False)
-
-y = df_anim_r['y'][start:end].reset_index(drop=True).to_string(index=False)
-t = df_anim_r['timestamp_milli'][start:end].reset_index(drop=True)
-t = [(t[i] - t[0]) for i in range(len(t))] 
-# x=[20,23,25,27,29,31]
-# y=[10,12,14,16,17,19]
-# t=[2,9,1,4,3,9]
-
-print('t: ', t)
-print('x: ', x)
-print('y: ', y)
-
-#create index list for frames, i.e. how many cycles each frame will be displayed
-frame_t = []
-for i, item in enumerate(t):
-    frame_t.extend([i] *(item))   # TODO : to understand !!
-    
-
-def init():
-    fig.clear()
-
-#animation function
-def animate(i): 
-    #prevent autoscaling of figure
-
-    #set new point
-    print("plot i:" + str(i)+" x:" + str(x[i])+ "  y:" + str(y[i]))
-    plt.scatter(x[i], y[i], c = "b")
-
-#animate scatter plot
-ani = anim.FuncAnimation(fig, animate, init_func = init, 
-                         frames = frame_t, interval = 1, repeat = True)
-plt.show()
-
-############################################
-
-
-
-
-
-# import numpy as np
-
-# import matplotlib.animation as animation
-
-
-
-# length= 1
-
-# xmin = -2
-# xmax = 2
-# nbx = 100
-
-
-# fig, ax = plt.subplots()
-# point, = ax.plot([], [], ls="none", marker="o")
-# # plt.xlim(xmin, xmax)
-# # plt.ylim(-1,1)
-
-# # fonction à définir quand blit=True
-# # crée l'arrière de l'animation qui sera présent sur chaque image
-
-# def animate(i): 
-
-#     a_pitch = df.iloc[ i , : ].pitch
-#     t = df.iloc[ i , : ].timestamp_0
-#     x= length * math.sin(a_pitch)
-#     y= length * math.cos(a_pitch)
-#     print("i:" +str(i) +  "\t t:"+ str(t))
-#     print("x:",x)
-#     print("y:",y)
-#     point.set_data(x, y)
-#     return  point
-    
- 
-# ani = animation.FuncAnimation(fig, animate,  frames=100, blit=True, interval=20, repeat=False)
-
-# plt.show()
-
-
-
-print("---END---")
-
-
-
-
-
-
-
-
-
-
-# ##########""
-# import numpy as np
-
-# import matplotlib.animation as animation
-# length= 1
-
-# fig = plt.figure(figsize=(5, 5), facecolor='w')
-# ax = fig.add_subplot(1, 1, 1)
-# plt.rcParams['font.size'] = 15
-
-# lns = []
-
-# for index, row in df.iterrows():
-
-#     ln, = ax.plot([0, 0], [length * math.sin(row['pitch']), length* math.cos(row['pitch'])],
-#                   color='k', lw=2)
-#     tm = ax.text(-1, 0.9, 'time = %.1fs' % t[i])
-#     lns.append([ln, tm])
-# ax.set_aspect('equal', 'datalim')
-# ax.grid()
-# ani = animation.ArtistAnimation(fig, lns, interval=50)
