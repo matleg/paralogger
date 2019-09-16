@@ -91,64 +91,94 @@ def load_ulog_file(file_name):
 ### PARAMETERS ###
 
 ulog_file_name = 'log_0_2019-9-14-21-54-24.ulg'
+Reload_file = False
+name_df_input= 'df_ulog.pkl'
 
 
 ### MAIN ###
 print("---START---")
-print("Reading Ulog file ... ")
-
-ulog = load_ulog_file(ulog_file_name)
-px4_ulog = PX4ULog(ulog)
-px4_ulog.add_roll_pitch_yaw()
-
-vehicle_attitude = ulog.get_dataset('vehicle_attitude')
-timestamp = vehicle_attitude.data['timestamp']  # in microsecond
-timestamp_0 = [(timestamp[i] - timestamp[0])/1000000 for i in range(len(timestamp))] # Divide  by 10E6  micro second to second
-pitch = vehicle_attitude.data['pitch']
-roll = vehicle_attitude.data['roll']
-yaw = vehicle_attitude.data['yaw']
 
 
-print("Creating Dataframe")
+if Reload_file:
+    print("Reading Ulog file ... ")
 
-# intialise data of lists. 
-data = {'timestamp':timestamp, 'timestamp_0':timestamp_0,'pitch':pitch, 'roll':roll, 'yaw':yaw} 
-  
-# Create DataFrame 
-df = pd.DataFrame(data) 
-df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz
-  
-# Print the output. 
+    ulog = load_ulog_file(ulog_file_name)
+    px4_ulog = PX4ULog(ulog)
+    px4_ulog.add_roll_pitch_yaw()
+
+    vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+    timestamp = vehicle_attitude.data['timestamp']  # in microsecond
+    timestamp_ms_0 = [(timestamp[i] - timestamp[0]) for i in range(len(timestamp))]
+
+    pitch = vehicle_attitude.data['pitch']
+    roll = vehicle_attitude.data['roll']
+    yaw = vehicle_attitude.data['yaw']
+
+
+    print("Creating Dataframe")
+
+    # intialise data of lists. 
+    data = {'timestamp':timestamp, 'timestamp_ms_0':timestamp_ms_0,'pitch':pitch, 'roll':roll, 'yaw':yaw} 
+    
+    # Create DataFrame 
+    df = pd.DataFrame(data) 
+    df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz 
+    df['timestamp_s_0'] = df['timestamp_ms_0']/1000000
+    print("Writing : df_ulog.pkl ")
+    df.to_pickle("df_ulog.pkl")
+else:
+    print("Loading : df_ulog.pkl ")
+    df = pd.read_pickle("df_ulog.pkl")
+
+# Print the input Dataframe. 
 print(df )
 
 
-print("Plotting ... ")
-
 ## PLOT WITH MATPLOTLIB
-#Plot Pitch and roll
-df.plot(x='timestamp_0', y='pitch', marker='.',title="Pitch[rad] /time0")
-df.plot(x='timestamp_0', y='roll', marker='.',title="Roll[rad] /time0")
-#plt.show()
+if 0:
+    print("Plotting mathplotlib... ")
+    #Plot Pitch and roll
+    df.plot(x='timestamp_0', y='pitch', marker='.',title="Pitch[rad] /time0")
+    df.plot(x='timestamp_0', y='roll', marker='.',title="Roll[rad] /time0")
+    #plt.show()
 
-#Plot Histogram delay_log.
-df.hist(column='delay_log',bins=200, range=(3900, 4100))
-plt.show()
+    #Plot Histogram delay_log.
+    df.hist(column='delay_log',bins=200, range=(3900, 4100))
+    plt.show()
 
-# ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
+## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
+if 0:
+    print("Plotting bokeh... ")
+    source = ColumnDataSource(df)
 
-source = ColumnDataSource(df)
+    # create a new plot and add a renderer
+    left = figure( title="Pitch[rad]/time0")
+    left.circle(x='timestamp_0', y='pitch', source=source)
 
-# create a new plot and add a renderer
-left = figure( title="Pitch[rad]/time0")
-left.circle(x='timestamp_0', y='pitch', source=source)
+    # create another new plot and add a renderer
+    right = figure(  title='Roll[rad]/time0')
+    right.circle(x='timestamp_0', y='roll', source=source)
 
-# create another new plot and add a renderer
-right = figure(  title='Roll[rad]/time0')
-right.circle(x='timestamp_0', y='roll', source=source)
+    p = gridplot([[left, right]])
 
-p = gridplot([[left, right]])
-
-show(p)
+    show(p)
 
 
 ### ANIMATION
+# To make the naimation we resample de data  at 25hz (40ms)  with a linear interpolation, 
+# in order to have a fix frame rate for the animation.
+df_anim=df.copy()
+length = 1
+
+df_anim['x'] = length * np.sin(df_anim.pitch) 
+df_anim['y'] = length * np.cos(df_anim.pitch) 
+#df_anim['timestamp_nano'] = df_anim.timestamp*1000 
+
+df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_ms_0']*1000)
+df_anim = df_anim.set_index('Datetime')
+
+print(df_anim)
+df_anim_r = df_anim.resample('40ms').interpolate(method='linear')
+
+print("resampling")
+print(df_anim_r)
