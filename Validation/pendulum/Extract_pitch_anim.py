@@ -92,6 +92,7 @@ def load_ulog_file(file_name):
 
 ulog_file_name = 'log_0_2019-9-14-21-54-24.ulg'
 Reload_file = False
+
 name_df_input= 'df_ulog.pkl'
 
 
@@ -108,7 +109,7 @@ if Reload_file:
 
     vehicle_attitude = ulog.get_dataset('vehicle_attitude')
     timestamp = vehicle_attitude.data['timestamp']  # in microsecond
-    timestamp_ms_0 = [(timestamp[i] - timestamp[0]) for i in range(len(timestamp))]
+    timestamp_us_0 = [(timestamp[i] - timestamp[0]) for i in range(len(timestamp))]
 
     pitch = vehicle_attitude.data['pitch']
     roll = vehicle_attitude.data['roll']
@@ -118,12 +119,12 @@ if Reload_file:
     print("Creating Dataframe")
 
     # intialise data of lists. 
-    data = {'timestamp':timestamp, 'timestamp_ms_0':timestamp_ms_0,'pitch':pitch, 'roll':roll, 'yaw':yaw} 
+    data = {'timestamp':timestamp, 'timestamp_us_0':timestamp_us_0,'pitch':pitch, 'roll':roll, 'yaw':yaw} 
     
     # Create DataFrame 
     df = pd.DataFrame(data) 
     df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz 
-    df['timestamp_s_0'] = df['timestamp_ms_0']/1000000
+    df['timestamp_s_0'] = df['timestamp_us_0']/1000000
     print("Writing : df_ulog.pkl ")
     df.to_pickle("df_ulog.pkl")
 else:
@@ -138,8 +139,8 @@ print(df )
 if 0:
     print("Plotting mathplotlib... ")
     #Plot Pitch and roll
-    df.plot(x='timestamp_0', y='pitch', marker='.',title="Pitch[rad] /time0")
-    df.plot(x='timestamp_0', y='roll', marker='.',title="Roll[rad] /time0")
+    df.plot(x='timestamp_s_0', y='pitch', marker='.',title="Pitch[rad] /time0")
+    df.plot(x='timestamp_s_0', y='roll', marker='.',title="Roll[rad] /time0")
     #plt.show()
 
     #Plot Histogram delay_log.
@@ -153,11 +154,11 @@ if 0:
 
     # create a new plot and add a renderer
     left = figure( title="Pitch[rad]/time0")
-    left.circle(x='timestamp_0', y='pitch', source=source)
+    left.circle(x='timestamp_s_0', y='pitch', source=source)
 
     # create another new plot and add a renderer
     right = figure(  title='Roll[rad]/time0')
-    right.circle(x='timestamp_0', y='roll', source=source)
+    right.circle(x='timestamp_s_0', y='roll', source=source)
 
     p = gridplot([[left, right]])
 
@@ -168,17 +169,71 @@ if 0:
 # To make the naimation we resample de data  at 25hz (40ms)  with a linear interpolation, 
 # in order to have a fix frame rate for the animation.
 df_anim=df.copy()
-length = 1
+length = -1
 
 df_anim['x'] = length * np.sin(df_anim.pitch) 
 df_anim['y'] = length * np.cos(df_anim.pitch) 
-#df_anim['timestamp_nano'] = df_anim.timestamp*1000 
 
-df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_ms_0']*1000)
+
+df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_us_0']*1000)
 df_anim = df_anim.set_index('Datetime')
 
-print(df_anim)
+print(df_anim[10000:10010])
 df_anim_r = df_anim.resample('40ms').interpolate(method='linear')
 
 print("resampling")
-print(df_anim_r)
+print(df_anim_r[10000:10010])
+
+# Animation
+
+import matplotlib.pyplot as plt
+import matplotlib.animation as anim
+
+xmin=-1
+ymin= -0.5
+xmax=1
+ymax=-1.5
+
+start = 4500
+end = start + 150
+
+fig = plt.figure()
+ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
+                     xlim=(-0.25, 0.25), ylim=(-1.5, 0.5))
+line, = ax.plot([], [], 'o-', lw=2)
+time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
+
+x = df_anim_r['x'][start:end]
+
+y = df_anim_r['y'][start:end]
+t = df_anim_r['timestamp_us_0'][start:end]
+t = [(t[i] - t[0]) for i in range(len(t))] 
+
+# print('t: ', t)
+# print('x: ', x)
+# print('y: ', y)
+
+def init():
+
+    line.set_data([], [])
+    time_text.set_text('')
+
+#animation function
+def animate(i): 
+    #prevent autoscaling of figure
+    # plt.xlim(xmin, xmax)
+    # plt.ylim(ymin,ymax)
+    time_text.set_text('time = %.4fs' % (int(i)*40/1000))
+    xlist = [0, x[i]]
+    ylist = [0, y[i]]
+
+    line.set_data(xlist, ylist)
+    #line.set_data(x[i], y[i])
+    #set new point
+    # print("plot i:" + str(i)+" x:" + str(x[i])+ "  y:" + str(y[i]))
+    # plt.scatter(x[i], y[i], c = "b")
+
+#animate scatter plot
+ani = anim.FuncAnimation(fig, animate, init_func = init, 
+                          interval = 40, repeat = True)
+plt.show()
