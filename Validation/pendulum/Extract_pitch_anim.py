@@ -189,7 +189,7 @@ if 0:
 
 #Animation Parameters:
 length_bar = -1
-transparent_video = False
+transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out.mp4"
 nb_frame_s = 25
@@ -236,7 +236,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
                      xlim=(-0.35, 0.35), ylim=(-1.5, 0.5))
 line, = ax.plot([], [], 'o-', lw=2)
-time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes ,color='green')
+time_text = ax.text(0.02, 0.05, '', transform=ax.transAxes ,color='green')
 
 x = df_anim_r['x'][start:end]
 
