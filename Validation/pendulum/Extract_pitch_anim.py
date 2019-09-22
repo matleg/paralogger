@@ -33,6 +33,7 @@ from functools import lru_cache
 #pylint: disable=unused-variable, too-many-branches
 
 
+
 #%%  functions and decorator
 ###  DECORATOR ####
 
@@ -165,7 +166,7 @@ df['roll0'] = df['roll'] - avg_roll
 
 #%% PLOT Input curve
 ## PLOT WITH MATPLOTLIB
-if 1:
+if 0:
     print("Plotting mathplotlib... ")
     #Plot Pitch and roll
     # df.plot(x='timestamp_s_0', y='pitch', marker='.',title="Pitch[rad] /time0")
@@ -216,9 +217,8 @@ length_bar = -1
 transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out.mp4"
-nb_frame_s = 25
+nb_frame_s = -1  # if -1 no resample
 
-time_between_frame_ms = 1/nb_frame_s*1000
 
 df_anim=df.copy()
 
@@ -229,12 +229,25 @@ df_anim['y'] = length_bar * np.cos(df_anim['pitch0'])
 df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_us_0']*1000)
 df_anim = df_anim.set_index('Datetime')
 
-print(df_anim)
-time_gap = str(time_between_frame_ms) + 'ms'
-df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
+
+print(df_anim.head())
+
 
 print("resampling ... ")
-print(df_anim_r)
+if nb_frame_s >0:
+    time_between_frame_ms = 1/nb_frame_s*1000
+    nb_frame_s_final = nb_frame_s
+    time_gap = str(time_between_frame_ms) + 'ms'
+    #df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
+    df_anim_r = df_anim.resample(time_gap).last()
+else:
+    df_anim_r = df_anim.copy()
+    time_between_frame_ms = df_anim_r['delay_log'].mean()/1000
+    nb_frame_s_final = 1 / time_between_frame_ms *1000
+
+
+
+print(df_anim_r.head())
 
 #%% PLOT RAW AND RESAMPLE WITH MATPLOTLIB
 if 1:
@@ -250,20 +263,20 @@ if 1:
     plt.legend(h1+h2)
     plt.show()
 
-# Animation
+#%% Animation
 print("\n Starting animation... \n")
 
-if 0:
+if 1:
 
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
 
     nb_frame_tot = len(df_anim_r.index)
-    time_between_frame_ms = 1/nb_frame_s*1000
 
     #summary parameters:
     print('nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
-    print('nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s))
+    print('nb_frame_s_final: ' +str(nb_frame_s_final))
+    print('nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s_final))
     print("transparent_video : " + str(transparent_video))
     print("hide_axes : " + str(hide_axes))
 
@@ -316,8 +329,10 @@ if 0:
         # plt.scatter(x[i], y[i], c = "b")
 
     # Create animation:
+
     ani = anim.FuncAnimation(fig, animate, init_func = init, frames = nb_frame_tot,
                             interval = time_between_frame_ms, repeat = False)
+
 
     # Display animation
     if 0 :   
@@ -329,7 +344,7 @@ if 0:
         print("\n saving animation to file : " + str(name_output_mp4)) 
         # Set up formatting for the movie files
         Writer = anim.writers['ffmpeg']
-        writer = Writer(fps = nb_frame_s, metadata = dict(title='Validation Video'), bitrate = 1800 , codec = mCodec)
+        writer = Writer(fps = nb_frame_s_final, metadata = dict(title='Validation Video'), extra_args=['-loglevel', 'verbose'], bitrate = 1800 , codec = mCodec)
 
 
         ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
