@@ -1,7 +1,15 @@
 #! /usr/bin/env python
 """
 Extract parameters from an ULog file
+And Created an animation for th pitch angle .
+
+Use  to validate the calibration , by overlaying  with a video
+
+Fred
+15/09/2019
 """
+
+#%% import
 
 from __future__ import print_function
 
@@ -9,6 +17,7 @@ import argparse
 import sys
 import time
 import math
+
 from pyulog import ULog
 from pyulog.px4 import PX4ULog
 
@@ -24,6 +33,8 @@ from functools import lru_cache
 #pylint: disable=unused-variable, too-many-branches
 
 
+
+#%%  functions and decorator
 ###  DECORATOR ####
 
 def timeit(method):
@@ -88,7 +99,7 @@ def load_ulog_file(file_name):
 
     return ulog
 
-### PARAMETERS ###
+#%% PARAMETERS 
 
 ulog_file_name = 'log_0_2019-9-14-21-54-24.ulg'
 Reload_file = False
@@ -96,7 +107,7 @@ Reload_file = False
 name_df_input= 'df_ulog.pkl'
 
 
-### MAIN ###
+#%%  MAIN 
 print("---START---")
 
 
@@ -134,7 +145,7 @@ else:
 # Print the input Dataframe. 
 print(df )
 
-## Calibrate 
+#%%  Calibrate 
 # For each Making an avergae on a prediod of time 
 # and substatre this vaule to all values.
 
@@ -153,13 +164,27 @@ df['pitch0'] = df['pitch'] - avg_pitch
 df['roll0'] = df['roll'] - avg_roll
 
 
+#%% PLOT Input curve
 ## PLOT WITH MATPLOTLIB
-if 1:
+if 0:
     print("Plotting mathplotlib... ")
     #Plot Pitch and roll
-    df.plot(x='timestamp_s_0', y='pitch', marker='.',title="Pitch[rad] /time0")
-    df.plot(x='timestamp_s_0', y='roll', marker='.',title="Roll[rad] /time0")
-    #plt.show()
+    # df.plot(x='timestamp_s_0', y='pitch', marker='.',title="Pitch[rad] /time0")
+    # df.plot(x='timestamp_s_0', y='roll', marker='.',title="Roll[rad] /time0")
+    # #plt.show()
+
+    plt.xlabel('Time 0')
+
+    ax1 = df.pitch.plot(color='blue', grid=True, label='Pitch')
+    ax2 = df.roll.plot(color='red', grid=True, secondary_y=False, label='Roll')
+
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+
+    plt.legend(h1+h2)
+    plt.show()
+
+
 
     #Plot Histogram delay_log.
     df.hist(column='delay_log',bins=200, range=(3900, 4100))
@@ -183,7 +208,7 @@ if 0:
     show(p)
 
 
-### ANIMATION
+#%%  ANIMATION
 # To make the naimation we resample de data  at 25hz (40ms)  with a linear interpolation, 
 # in order to have a fix frame rate for the animation.
 
@@ -192,9 +217,8 @@ length_bar = -1
 transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out.mp4"
-nb_frame_s = 25
+nb_frame_s = -1  # if -1 no resample
 
-time_between_frame_ms = 1/nb_frame_s*1000
 
 df_anim=df.copy()
 
@@ -205,94 +229,125 @@ df_anim['y'] = length_bar * np.cos(df_anim['pitch0'])
 df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_us_0']*1000)
 df_anim = df_anim.set_index('Datetime')
 
-print(df_anim)
-time_gap = str(time_between_frame_ms) + 'ms'
-df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
+
+print(df_anim.head())
+
 
 print("resampling ... ")
-print(df_anim_r)
-
-# Animation
-print("\n Starting animation... \n")
-
-import matplotlib.pyplot as plt
-import matplotlib.animation as anim
-
-nb_frame_tot = len(df_anim_r.index)
-time_between_frame_ms = 1/nb_frame_s*1000
-
-#summary parameters:
-print('nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
-print('nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s))
-print("transparent_video : " + str(transparent_video))
-print("hide_axes : " + str(hide_axes))
-
-# Here you Can specify a start row and a end row , to debug:
-start = None
-end = None
-
-#Creating the figure
-fig = plt.figure()
-ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
-                     xlim=(-0.35, 0.35), ylim=(-1.5, 0.5))
-line, = ax.plot([], [], 'o-', lw=2)
-time_text = ax.text(0.02, 0.05, '', transform=ax.transAxes ,color='green')
-
-x = df_anim_r['x'][start:end]
-
-y = df_anim_r['y'][start:end]
-t = df_anim_r['timestamp_us_0'][start:end]
-t = [(t[i] - t[0]) for i in range(len(t))] 
-
-if hide_axes :
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)
-    ax.set_frame_on(False)
-
-if transparent_video :
-    fig.patch.set_alpha(0.)
-    mCodec= "png"
-    mKarg_writter= {'transparent': True, 'facecolor': 'none'}
+if nb_frame_s >0:
+    time_between_frame_ms = 1/nb_frame_s*1000
+    nb_frame_s_final = nb_frame_s
+    time_gap = str(time_between_frame_ms) + 'ms'
+    #df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
+    df_anim_r = df_anim.resample(time_gap).last()
 else:
-    mCodec= None
-    mKarg_writter = None
+    df_anim_r = df_anim.copy()
+    time_between_frame_ms = df_anim_r['delay_log'].mean()/1000
+    nb_frame_s_final = 1 / time_between_frame_ms *1000
 
-def init():
 
-    line.set_data([], [])
-    time_text.set_text('')
 
-#animation function:
-def animate(i): 
+print(df_anim_r.head())
 
-    time_text.set_text('time = %.3fs' % (int(i)*time_between_frame_ms/1000))
-    xlist = [0, x[i]]
-    ylist = [0, y[i]]
+#%% PLOT RAW AND RESAMPLE WITH MATPLOTLIB
+if 1:
 
-    line.set_data(xlist, ylist)
-    #line.set_data(x[i], y[i])
-    #set new point
-    # print("plot i:" + str(i)+" x:" + str(x[i])+ "  y:" + str(y[i]))
-    # plt.scatter(x[i], y[i], c = "b")
+    plt.xlabel('Time 0')
 
-# Create animation:
-ani = anim.FuncAnimation(fig, animate, init_func = init, frames = nb_frame_tot,
-                          interval = time_between_frame_ms, repeat = False)
+    ax1 = df_anim.pitch.plot(color='blue', grid=True, label='Pitch')
+    ax2 = df_anim_r.pitch.plot(color='red', grid=True, secondary_y=False, label='Pitch _ resample')
 
-# Display animation
-if 0 :   
-    print("\n displaying animation ...")                       
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+
+    plt.legend(h1+h2)
     plt.show()
 
-# save animation to file:
+#%% Animation
+print("\n Starting animation... \n")
+
 if 1:
-    print("\n saving animation to file : " + str(name_output_mp4)) 
-    # Set up formatting for the movie files
-    Writer = anim.writers['ffmpeg']
-    writer = Writer(fps = nb_frame_s, metadata = dict(title='Validation Video'), bitrate = 1800 , codec = mCodec)
+
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as anim
+
+    nb_frame_tot = len(df_anim_r.index)
+
+    #summary parameters:
+    print('nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
+    print('nb_frame_s_final: ' +str(nb_frame_s_final))
+    print('nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s_final))
+    print("transparent_video : " + str(transparent_video))
+    print("hide_axes : " + str(hide_axes))
+
+    # Here you Can specify a start row and a end row , to debug:
+    start = None
+    end = None
+
+    #Creating the figure
+    fig = plt.figure()
+    ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
+                        xlim=(-0.35, 0.35), ylim=(-1.5, 0.5))
+    line, = ax.plot([], [], 'o-', lw=2)
+    time_text = ax.text(0.02, 0.05, '', transform=ax.transAxes ,color='green')
+
+    x = df_anim_r['x'][start:end]
+
+    y = df_anim_r['y'][start:end]
+    t = df_anim_r['timestamp_us_0'][start:end]
+    t = [(t[i] - t[0]) for i in range(len(t))] 
+
+    if hide_axes :
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
+        ax.set_frame_on(False)
+
+    if transparent_video :
+        fig.patch.set_alpha(0.)
+        mCodec= "png"
+        mKarg_writter= {'transparent': True, 'facecolor': 'none'}
+    else:
+        mCodec= None
+        mKarg_writter = None
+
+    def init():
+
+        line.set_data([], [])
+        time_text.set_text('')
+
+    #animation function:
+    def animate(i): 
+
+        time_text.set_text('time = %.3fs' % (int(i)*time_between_frame_ms/1000))
+        xlist = [0, x[i]]
+        ylist = [0, y[i]]
+
+        line.set_data(xlist, ylist)
+        #line.set_data(x[i], y[i])
+        #set new point
+        # print("plot i:" + str(i)+" x:" + str(x[i])+ "  y:" + str(y[i]))
+        # plt.scatter(x[i], y[i], c = "b")
+
+    # Create animation:
+
+    ani = anim.FuncAnimation(fig, animate, init_func = init, frames = nb_frame_tot,
+                            interval = time_between_frame_ms, repeat = False)
 
 
-    ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
+    # Display animation
+    if 0 :   
+        print("\n displaying animation ...")                       
+        plt.show()
+
+    # save animation to file:
+    if 1:
+        print("\n saving animation to file : " + str(name_output_mp4)) 
+        # Set up formatting for the movie files
+        Writer = anim.writers['ffmpeg']
+        writer = Writer(fps = nb_frame_s_final, metadata = dict(title='Validation Video'), extra_args=['-loglevel', 'verbose'], bitrate = 1800 , codec = mCodec)
+
+
+        ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
 
 print("------ END ------") 
 
@@ -304,3 +359,6 @@ print("------ END ------")
 #Animation:
 # http://adrian.pw/blog/matplotlib-transparent-animation/
 # https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.animation.FuncAnimation.html
+
+
+#%%
