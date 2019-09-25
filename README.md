@@ -8,28 +8,43 @@ Misc stuff about paraglider logger
 
 ## Project road:
 1. **Hardware selection**
+
+    * IMU
+    * Gps
+    * battery and power board
+    * plastic case
+    * pitot tube (if needed)
+    * keyboard (or input method , to tag specific manoeuvre in the log  and to discard the badly executed ones)
+    * telemetry (if needed?  to send live data to ground.)
+
 2. **Validations indoor:**
+    Before going in the air some points needed to be validate to trust the recorded data.
 
     feature|  validation method | description
     ------------ | ------------- | ------------- 
-    Quaternions - pitch, roll | pendulum |overlaying a animation based on data and a video recording the experience
-    Quaternions - yaw| Slow rotating table |overlaying a animation based on data and a video recording the experience
-    Horizon level stability | Fast rotating table |check that the artificial horizon is not tilled under roation acceleration
-    Sync GPS between devices | shock table |needed to link data from pilot and wing
-    position-orientation reconstruction | -  |reconstruction of the travel and oriention on the screen.
+    Quaternions - pitch, roll | pendulum | Overlaying a animation based on data and a video recording the experience.
+    Quaternions - yaw| Slow rotating table | Overlaying a animation based on data and a video recording the experience.
+    Horizon level stability | Fast rotating table | Check that the artificial horizon is not tilted under rotation acceleration.
+    Sync GPS between devices | shock table | Needed to link data from pilot and wing.
+    Position-orientation reconstruction | -  | Reconstruction of the travel and orientation on the screen.
+    Sync with camera | - |Check the possibility to sync the data with video recording (using camera with gps), useful to debug in air.
+
 
 3. **Validation in the air:**
+    Before trusting the data for interpreting the manoeuvre, we need to confirm different points, to be sure we recorded the good stuff.
 
     feature|  validation method | description
     ------------ |  ------------- | ------------- 
-    Position in the harness  | ? |check the IMU  mesurement and the GPS reception
-    Position in the glider | ? |check the sensibility to glider deformation
-    number of device  | ? |check if two device are really needed
+    Position in the harness  | ? |Check the best placement in the harness for IMU measurement and the GPS reception.
+    Position in the glider | ? |Check the sensibility to glider deformation.
+    Number of devices  | ? |Check if two device are really needed.
 
-4. **Test in the air:**
+
+4. **Possible outputs:**
+Here a list of possible pertinent output, that should be tested for their revelancy .
 
     * From simple measure 
-        * g force []
+        * g force [] 
         * altitude lost [m]
         * recovery time [s]
         * speed ( need pitot) [m/s]
