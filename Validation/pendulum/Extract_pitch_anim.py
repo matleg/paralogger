@@ -217,7 +217,7 @@ length_bar = -1
 transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out.mp4"
-nb_frame_s = -1  # if -1 no resample
+nb_frame_s = 25  # if -1 no resample
 
 
 df_anim=df.copy()
@@ -233,14 +233,16 @@ df_anim = df_anim.set_index('Datetime')
 print(df_anim.head())
 
 
-print("resampling ... ")
+print("check for resampling parameters: ")
 if nb_frame_s >0:
+    print("resampling ... ")
     time_between_frame_ms = 1/nb_frame_s*1000
     nb_frame_s_final = nb_frame_s
     time_gap = str(time_between_frame_ms) + 'ms'
     #df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
     df_anim_r = df_anim.resample(time_gap).last()
 else:
+    print("not resampling ... ")
     df_anim_r = df_anim.copy()
     time_between_frame_ms = df_anim_r['delay_log'].mean()/1000
     nb_frame_s_final = 1 / time_between_frame_ms *1000
@@ -254,8 +256,8 @@ if 1:
 
     plt.xlabel('Time 0')
 
-    ax1 = df_anim.pitch.plot(color='blue', grid=True, label='Pitch')
-    ax2 = df_anim_r.pitch.plot(color='red', grid=True, secondary_y=False, label='Pitch _ resample')
+    ax1 = df_anim.pitch.plot(color='blue', grid=True, label='Pitch',style='-*')
+    ax2 = df_anim_r.pitch.plot(color='red', grid=True, secondary_y=False, label='Pitch _ resample',style='-*')
 
     h1, l1 = ax1.get_legend_handles_labels()
     h2, l2 = ax2.get_legend_handles_labels()
