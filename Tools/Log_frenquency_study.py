@@ -16,6 +16,7 @@ import sys
 import time
 import math
 import glob
+import os
 
 from pyulog import ULog
 from pyulog.px4 import PX4ULog
@@ -46,22 +47,22 @@ def timeit(method):
         return result    
     return timed
 
-### FUNCTIONS  ####
 
-
-#%% PARAMETERS 
-
-ulog_file_name = 'sample_log/log_0_2019-9-14-21-54-24.ulg'
+#%% FUNCTIONS 
 
 
 def info_to_df(ulog, verbose,file_name):
     """Show general information from an ULog"""
 
     time_s= int((ulog.last_timestamp - ulog.start_timestamp)/1e6)
-    print("time_s",time_s)
+    print("time_s: ",time_s)
+
+    file_size = os.path.getsize(file_log)/1e6  # getsize give the size in bytes , converted th Mb
+    log_debit = file_size/time_s  # so mb/s"
+    print("file_size: " + str(file_size) + " mb \t log_debit: " + str(log_debit) + " mb/s")
 
     sd_log = ulog.initial_parameters["SDLOG_PROFILE"]
-    print("sd_log",sd_log)
+    print("sdlog_mode: ",sd_log)
 
     # print("")
     # print("{:<41} {:7}, {:10}".format("Name (multi id, message size in bytes)",
@@ -74,7 +75,7 @@ def info_to_df(ulog, verbose,file_name):
         num_data_points = len(d.data['timestamp'])
         name_id = "{:}".format(d.name)
         data.append(dict({'name': name_id, 'mode':sd_log  , 'frequency':num_data_points / time_s,
-         'mess_size':message_size, 'file':file_name}))
+         'mess_size':message_size, 'file':file_name ,'debit':log_debit}))
         #
         # print(" {:<40}  {:2f}".format(name_id, num_data_points / time_s))
 
@@ -125,13 +126,13 @@ print(dfg)
 print("\n Ready ")
 
 table_freq_mean = pd.pivot_table(dfg, values=['frequency'], index=['name'],columns=['mode'],
-                         aggfunc={'frequency': np.mean})
+                         aggfunc={'frequency': np.mean}).round(2)
 
 table_freq_std = pd.pivot_table(dfg, values=['frequency'], index=['name'],columns=['mode'],
-                         aggfunc={'frequency': np.std})
+                         aggfunc={'frequency': np.std}).round(2)
 
 table_size_mess_mean = pd.pivot_table(dfg, values=['mess_size'], index=['name'],columns=['mode'],
-                         aggfunc={'mess_size': np.mean})
+                         aggfunc={'mess_size': np.mean}).round(0)
 
 
 print ("\n Mean frequency: ")
@@ -180,5 +181,11 @@ def bit_mask2text(input_value,dict_values):
 for mode in list_used_mode:
     bit_mask2text(mode , dict_sd_mode)
 
+#Debit (sdlog_mode):
+table_debit_mode = pd.pivot_table(dfg, values=['debit'], columns=['mode'],
+                         aggfunc={'debit': np.mean}).round(4)
+
+print ("\n Debit (sdlog_mode): ")
+print(table_debit_mode)
 
 print ("-- END --")
