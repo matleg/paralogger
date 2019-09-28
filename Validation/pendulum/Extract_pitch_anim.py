@@ -101,8 +101,8 @@ def load_ulog_file(file_name):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'log_0_2019-9-14-21-54-24.ulg'
-Reload_file = False
+ulog_file_name = 'sample_log/runpendulum/log_18_2019-9-28-16-26-48.ulg'
+Reload_file = True
 
 name_df_input= 'df_ulog.pkl'
 
@@ -112,7 +112,7 @@ print("---START---")
 
 
 if Reload_file:
-    print("Reading Ulog file ... ")
+    print("Reading Ulog file : " + str(ulog_file_name))
 
     ulog = load_ulog_file(ulog_file_name)
     px4_ulog = PX4ULog(ulog)
@@ -342,7 +342,7 @@ if 1:
         plt.show()
 
     # save animation to file:
-    if 1:
+    if 0:
         print("\n saving animation to file : " + str(name_output_mp4)) 
         # Set up formatting for the movie files
         Writer = anim.writers['ffmpeg']
@@ -350,7 +350,7 @@ if 1:
 
 
         ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
-
+print("End with Ulog file : " + str(ulog_file_name))
 print("------ END ------") 
 
 
