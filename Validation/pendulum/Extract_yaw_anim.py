@@ -401,5 +401,6 @@ print("------ END ------")
 # http://adrian.pw/blog/matplotlib-transparent-animation/
 # https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.animation.FuncAnimation.html
 
-
+#FFMPEG
+# ffmpeg -i GOPR1316_run4.MP4 -r 60 heli_run4_60fps.mp4     Convert  to 60fps
 #%%
