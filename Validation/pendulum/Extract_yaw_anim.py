@@ -102,7 +102,7 @@ def load_ulog_file(file_name):
 #%% PARAMETERS 
 
 ulog_file_name = 'sample_log/log_23_2019-9-29-15-15-10.ulg'
-Reload_file = True
+Reload_file = False
 
 name_df_input= 'df_ulog_yaw.pkl'
 
@@ -125,6 +125,7 @@ if Reload_file:
     pitch = vehicle_attitude.data['pitch']
     roll = vehicle_attitude.data['roll']
     yaw = vehicle_attitude.data['yaw']
+    yaw_rate = vehicle_attitude.data['yawspeed']
 
     #Info Log
     print("\nInfo_log: ")
@@ -134,7 +135,7 @@ if Reload_file:
     print("\nCreating Dataframe")
 
     # intialise data of lists. 
-    data = {'timestamp':timestamp, 'timestamp_us_0':timestamp_us_0,'pitch':pitch, 'roll':roll, 'yaw':yaw } 
+    data = {'timestamp':timestamp, 'timestamp_us_0':timestamp_us_0,'pitch':pitch, 'roll':roll, 'yaw':yaw , 'yaw_rate':yaw_rate} 
     
     # Create DataFrame 
     df = pd.DataFrame(data) 
@@ -175,6 +176,7 @@ print( 'avg_yaw :' + str(avg_yaw) + " rad so:" + str(np.rad2deg(avg_yaw)) + " de
 df['pitch0'] = df['pitch'] - avg_pitch
 df['roll0'] = df['roll'] - avg_roll
 df['yaw0'] = df['yaw'] - avg_yaw + start_yaw_angle
+df['rpm'] = (df['yaw_rate']/(2*math.pi))*60
 #df['yawdeg'] = np.rad2deg(df['yaw']) 
 
 
@@ -221,7 +223,24 @@ if 0:
     plt.legend(h1+h2)
     plt.show()
 
+## PLOT WITH MATPLOTLIB YAW RATE
+if 1:
+    print("Plotting mathplotlib yaw rate [rad/s] ")
 
+    plt.xlabel('Time 0')
+
+    #ax1 = df['rpm'].plot(color='blue', grid=True, label='yaw_rate')
+    ax1 = df['yaw_rate'].plot(color='blue', grid=True, label='yaw_rate')
+    ax2 = df['rpm'].plot(color='blue', grid=True, secondary_y=True, label='rpm')
+
+    ax1.set_ylabel('[rad/s]')
+    ax2.set_ylabel('[rpm]')
+
+    h1, l1 = ax1.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+
+    plt.legend(h1+h2)
+    plt.show()
 
 ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
 if 0:
@@ -302,7 +321,7 @@ if 1:
 #%% Animation
 print("\n Starting animation... \n")
 
-if 1:
+if 0:
 
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
