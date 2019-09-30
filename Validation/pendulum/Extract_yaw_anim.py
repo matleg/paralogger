@@ -102,7 +102,8 @@ def load_ulog_file(file_name):
 #%% PARAMETERS 
 
 ulog_file_name = 'sample_log/log_23_2019-9-29-15-15-10.ulg'
-Reload_file = False
+Reload_file = True
+gravity = 9.80665 #m·s-2
 
 name_df_input= 'df_ulog_yaw.pkl'
 
@@ -119,6 +120,8 @@ if Reload_file:
     px4_ulog.add_roll_pitch_yaw()
 
     vehicle_attitude = ulog.get_dataset('vehicle_attitude')
+    vehicle_local_position = ulog.get_dataset('vehicle_local_position')
+
     timestamp = vehicle_attitude.data['timestamp']  # in microsecond
     timestamp_us_0 = [(timestamp[i] - timestamp[0]) for i in range(len(timestamp))]
 
@@ -207,17 +210,9 @@ if 0:
     plt.legend(h1+h2)
     plt.show()
 
-if 0:
-    x = np.linspace(0, 2 * np.pi, 400)
-    y = np.sin(x ** 2)
-    fig, axs = plt.subplots(2)
-    fig.suptitle('Vertically stacked subplots')
-    axs[0].plot(x, y)
-    axs[1].plot(x, -y)
-    plt.show()
 
 ## PLOT WITH MATPLOTLIB YAW
-if 1:
+if 0:
     print("Plotting mathplotlib yaw and yaw rate ")
 
     fig, axes = plt.subplots(nrows=2, ncols=1)
@@ -237,6 +232,48 @@ if 1:
 
     plt.show()
 
+
+if 1:
+    x_accel = vehicle_local_position.data['timestamp']
+    yx = vehicle_local_position.data['ax'] / gravity 
+    yy = vehicle_local_position.data['ay'] / gravity
+    yz = vehicle_local_position.data['az'] / gravity
+
+    yt=[]
+    for i in range(len(yx)):
+        yt.append( (np.linalg.norm([yx[i],yy[i],yz[i]])))
+
+    # vt = np.array([yx,yy,yz]) 
+    # yt = np.linalg.norm(vt,axis=1)
+
+    
+    fig, axs = plt.subplots(2, sharex=True)
+    fig.suptitle('Acceleration [nb g]')
+    axs[0].plot(x_accel, yx, label='ax' )
+    axs[0].plot(x_accel, yy, label='ay')
+    axs[0].plot(x_accel, yz, label='az')
+
+
+    axs[1].plot(x_accel, yt, label='a_tot')
+
+    for axi in axs:
+
+        axi.set_ylabel('[nb g]')
+        axi.grid(which='major', axis='y' ,color='b', linestyle='--')
+        axi.minorticks_on()
+ 
+
+        legend = axi.legend(loc='upper right', shadow=True, fontsize='x-small')
+
+    
+    # axs[0].set_ylabel('[nb g]')
+
+    # legend = axs[0].legend(loc='upper right', shadow=True, fontsize='x-small')
+    # legend = axs[1].legend(loc='upper right', shadow=True, fontsize='x-small')
+    axs[1].set_yticks(range(0,7,1) , minor=True)
+    plt.legend()
+    plt.show()
+
 ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
 if 0:
     print("Plotting bokeh... ")
@@ -254,7 +291,7 @@ if 0:
 
     show(p)
 
-
+#-------------------------------------------------------------------------------------------------------------------------------------
 #%%  ANIMATION
 # To make the naimation we resample de data  at 25hz (40ms)  with a linear interpolation, 
 # in order to have a fix frame rate for the animation.
