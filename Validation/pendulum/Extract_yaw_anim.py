@@ -207,39 +207,34 @@ if 0:
     plt.legend(h1+h2)
     plt.show()
 
-
-## PLOT WITH MATPLOTLIB YAW
 if 0:
-    print("Plotting mathplotlib yaw ")
-
-    plt.xlabel('Time 0')
-
-    ax1 = df.yaw.plot(color='blue', grid=True, label='yaw')
-    ax2 = df.yaw0.plot(color='red', grid=True, secondary_y=False, label='yaw0')
-
-    h1, l1 = ax1.get_legend_handles_labels()
-    h2, l2 = ax2.get_legend_handles_labels()
-
-    plt.legend(h1+h2)
+    x = np.linspace(0, 2 * np.pi, 400)
+    y = np.sin(x ** 2)
+    fig, axs = plt.subplots(2)
+    fig.suptitle('Vertically stacked subplots')
+    axs[0].plot(x, y)
+    axs[1].plot(x, -y)
     plt.show()
 
-## PLOT WITH MATPLOTLIB YAW RATE
+## PLOT WITH MATPLOTLIB YAW
 if 1:
-    print("Plotting mathplotlib yaw rate [rad/s] ")
+    print("Plotting mathplotlib yaw and yaw rate ")
+
+    fig, axes = plt.subplots(nrows=2, ncols=1)
 
     plt.xlabel('Time 0')
 
-    #ax1 = df['rpm'].plot(color='blue', grid=True, label='yaw_rate')
-    ax1 = df['yaw_rate'].plot(color='blue', grid=True, label='yaw_rate')
-    ax2 = df['rpm'].plot(color='blue', grid=True, secondary_y=True, label='rpm')
+    df['yaw'].plot(ax=axes[0],color='blue', grid=True, label='yaw')
+    df['yaw0'].plot(ax=axes[0],color='red', grid=True, secondary_y=False, label='yaw0')
 
-    ax1.set_ylabel('[rad/s]')
-    ax2.set_ylabel('[rpm]')
+    df['rpm'].plot(ax=axes[1],color='black', grid=True, secondary_y=False, label='rpm')
 
-    h1, l1 = ax1.get_legend_handles_labels()
-    h2, l2 = ax2.get_legend_handles_labels()
+    axes[0].set_title('yaw and yaw0')
+    axes[0].set_ylabel('[rad]')
 
-    plt.legend(h1+h2)
+    axes[1].set_title('yaw_rate')
+    axes[1].set_ylabel('[rpm]')
+
     plt.show()
 
 ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
@@ -269,7 +264,7 @@ length_bar = -1
 transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out_yaw.mp4"
-nb_frame_s = 125  # if -1 no resample
+nb_frame_s = -1  # if -1 no resample
 
 
 
