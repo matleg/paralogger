@@ -101,7 +101,7 @@ def load_ulog_file(file_name):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'sample_log/log_23_2019-9-29-15-15-10.ulg'
+ulog_file_name = 'sample_log/run_heli/log_21_2019-9-29-15-11-32_heli_fast.ulg'
 Reload_file = True
 gravity = 9.80665 #m·s-2
 
@@ -229,12 +229,13 @@ if 0:
 
     axes[1].set_title('yaw_rate')
     axes[1].set_ylabel('[rpm]')
-
+    plt.tight_layout()
     plt.show()
 
-
+## GENERAL PLOT
 if 1:
-    x_accel = vehicle_local_position.data['timestamp']
+    timestamp_us_vehicule = vehicle_local_position.data['timestamp']
+    timestamp_us_0_vehicule = [(timestamp_us_vehicule[i] - timestamp_us_vehicule[0])/1000000 for i in range(len(timestamp_us_vehicule))]
     yx = vehicle_local_position.data['ax'] / gravity 
     yy = vehicle_local_position.data['ay'] / gravity
     yz = vehicle_local_position.data['az'] / gravity
@@ -243,35 +244,48 @@ if 1:
     for i in range(len(yx)):
         yt.append( (np.linalg.norm([yx[i],yy[i],yz[i]])))
 
-    # vt = np.array([yx,yy,yz]) 
-    # yt = np.linalg.norm(vt,axis=1)
+    
+    fig, axs = plt.subplots(6, sharex=True , figsize=[14,9])
 
     
-    fig, axs = plt.subplots(2, sharex=True)
-    fig.suptitle('Acceleration [nb g]')
-    axs[0].plot(x_accel, yx, label='ax' )
-    axs[0].plot(x_accel, yy, label='ay')
-    axs[0].plot(x_accel, yz, label='az')
+    axs[0].plot(timestamp_us_0_vehicule, yx, label='Ax' )
+    axs[0].plot(timestamp_us_0_vehicule, yy, label='Ay')
+    axs[0].plot(timestamp_us_0_vehicule, yz, label='Az')
+    axs[1].plot(timestamp_us_0_vehicule, yt, label='A_tot')
+
+    axs[2].plot(df['timestamp_s_0'], df['pitch'], label='Pitch')
+    axs[3].plot(df['timestamp_s_0'], df['roll'], label='Roll')
+
+    axs[4].plot(df['timestamp_s_0'], df['yaw'], label='Raw')
+    axs[5].plot(df['timestamp_s_0'], df['rpm'], label='Rpm')
+
+    #Add title and lable for all graphs
+
+    dict_graph = {  '0': {'title': 'Accel',     'unit': 'nb_g'}, 
+                    '1': {'title': 'Accel Tot', 'unit': 'nb_g'}, 
+                    '2': {'title': 'Pitch',     'unit': 'rad'}, 
+                    '3': {'title': 'Roll',      'unit': 'rad'}, 
+                    '4': {'title': 'Yaw',       'unit': 'rad'}, 
+                    '5': {'title': 'Yaw speed', 'unit': 'rpm'}} 
+
+    for key, value in dict_graph.items():
+        axs[int(key)].set_title(value['title'])
+        axs[int(key)].set_ylabel(value['unit'])
+        
 
 
-    axs[1].plot(x_accel, yt, label='a_tot')
-
+    #For all graphs
     for axi in axs:
-
-        axi.set_ylabel('[nb g]')
         axi.grid(which='major', axis='y' ,color='b', linestyle='--')
         axi.minorticks_on()
- 
-
         legend = axi.legend(loc='upper right', shadow=True, fontsize='x-small')
 
-    
-    # axs[0].set_ylabel('[nb g]')
-
-    # legend = axs[0].legend(loc='upper right', shadow=True, fontsize='x-small')
-    # legend = axs[1].legend(loc='upper right', shadow=True, fontsize='x-small')
+    # sPecial details for graph
     axs[1].set_yticks(range(0,7,1) , minor=True)
+    axs[-1].set_xlabel("Time [s]")
+
     plt.legend()
+    plt.tight_layout()
     plt.show()
 
 ## PLOT WITH BOKEH # TODO  manage large number of points with downsampling
