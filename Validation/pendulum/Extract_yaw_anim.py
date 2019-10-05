@@ -53,6 +53,11 @@ def timeit(method):
 
 ### FUNCTIONS  ####
 
+def timer(start,end):
+    hours, rem = divmod(end-start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return ("{:0>2} h {:0>2} min {:05.2f} s".format(int(hours),int(minutes),seconds))
+
 @timeit
 @lru_cache(maxsize=None)
 def load_ulog_file(file_name):
@@ -101,16 +106,17 @@ def load_ulog_file(file_name):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'sample_log/run_heli2/log_29_2019-10-4-21-47-32.ulg'
-Reload_file = True
+ulog_file_name = 'sample_log/run_heli2/log_27_2019-10-4-21-38-06.ulg'
+Reload_file = False
 gravity = 9.80665 #m·s-2
+Rotor_Radius = 34#[cm]
 
 name_df_input= 'df_ulog_yaw.pkl'
 
 
 #%%  MAIN 
 print("---START---")
-
+t0 = time.time()
 
 if Reload_file:
     print("Reading Ulog file : " + str(ulog_file_name))
@@ -159,15 +165,19 @@ if Reload_file:
     #Merging the two dataframe
     df_G=pd.merge(df, df2, on="timestamp" ,how='left')
 
+    #interpolate Nan datas:
+    df_G['accel_x'].interpolate(method='polynomial', order=2 ,inplace=True)
+    df_G['accel_y'].interpolate(method='polynomial', order=2 ,inplace=True)
+    df_G['accel_z'].interpolate(method='polynomial', order=2 ,inplace=True)
 
     print("Writing : df_ulog.pkl ")
-    df.to_pickle("df_ulog.pkl")
+    df_G.to_pickle("df_ulog.pkl")
 else:
     print("Loading : df_ulog.pkl ")
-    df = pd.read_pickle("df_ulog.pkl")
+    df_G = pd.read_pickle("df_ulog.pkl")
 
 # Print the input Dataframe. 
-print(df )
+print(df_G )
 
 
 
@@ -181,24 +191,26 @@ end_cal_s = 10
 start_yaw_angle_deg = -10.8  #degrees
 start_yaw_angle = math.radians(start_yaw_angle_deg)  #convert to Rad
 
-mask = (df['timestamp_s_0'] > start_cal_s) & (df['timestamp_s_0'] <= end_cal_s)
+mask = (df_G['timestamp_s_0'] > start_cal_s) & (df_G['timestamp_s_0'] <= end_cal_s)
 
-avg_pitch = df.loc[mask, 'pitch'].mean()
-avg_roll = df.loc[mask, 'roll'].mean()
-avg_yaw = df.loc[mask, 'yaw'].mean()
+avg_pitch = df_G.loc[mask, 'pitch'].mean()
+avg_roll = df_G.loc[mask, 'roll'].mean()
+avg_yaw = df_G.loc[mask, 'yaw'].mean()
 
-print( "calibrating  from: " + str(start_cal_s) + "s to : " + str(end_cal_s) + " s" )
-print( 'avg_pitch :' + str(avg_pitch) + " rad so:" + str(np.rad2deg(avg_pitch)) + " deg")
-print( 'avg_roll :' + str(avg_roll) + " rad so:" + str(np.rad2deg(avg_roll)) + " deg")
-print( 'avg_yaw :' + str(avg_yaw) + " rad so:" + str(np.rad2deg(avg_yaw)) + " deg" + " wanted (deg): "+ str(start_yaw_angle_deg))
+print("\nCalibration :")
+print( " calibrating  from: " + str(start_cal_s) + "s to : " + str(end_cal_s) + " s" )
+print( ' avg_pitch :' + str(avg_pitch) + " rad so: " + str(np.rad2deg(avg_pitch)) + " deg")
+print( ' avg_roll :' + str(avg_roll) + " rad so: " + str(np.rad2deg(avg_roll)) + " deg")
+print( ' avg_yaw :' + str(avg_yaw) + " rad so: " + str(np.rad2deg(avg_yaw)) + " deg" + " wanted (deg): "+ str(start_yaw_angle_deg))
 
-df['pitch0'] = df['pitch'] - avg_pitch
-df['roll0'] = df['roll'] - avg_roll
-df['yaw0'] = df['yaw'] - avg_yaw + start_yaw_angle
-df['rpm'] = (df['yaw_rate']/(2*math.pi))*60
+df_G['pitch0'] = df_G['pitch'] - avg_pitch
+df_G['roll0'] = df_G['roll'] - avg_roll
+df_G['yaw0'] = df_G['yaw'] - avg_yaw + start_yaw_angle
+
+#Compute other
+df_G['rpm'] = (df_G['yaw_rate']/(2*math.pi))*60
+df_G['accel_tot'] = np.linalg.norm(df_G[['accel_x','accel_y','accel_z']].values,axis=1)
 #df['yawdeg'] = np.rad2deg(df['yaw']) 
-
-
 
 #%% PLOT Input curve
 ## PLOT HIST
@@ -250,30 +262,36 @@ if 0:
 
 #%% GENERAL PLOT
 if 1:
-    timestamp_us_local = vehicle_local_position.data['timestamp']
-    timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
-    yx = vehicle_local_position.data['ax'] / gravity 
-    yy = vehicle_local_position.data['ay'] / gravity
-    yz = vehicle_local_position.data['az'] / gravity
+    # # In case of relaod file , and for debugging , plot the log accel , not the interpolated one
+    # timestamp_us_local = vehicle_local_position.data['timestamp']
+    # timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
+    # yx = vehicle_local_position.data['ax'] / gravity 
+    # yy = vehicle_local_position.data['ay'] / gravity
+    # yz = vehicle_local_position.data['az'] / gravity
 
-    yt=[]
-    for i in range(len(yx)):
-        yt.append( (np.linalg.norm([yx[i],yy[i],yz[i]])))
-
-    
-    fig, axs = plt.subplots(6, sharex=True , figsize=[14,9])
+    # yt=[]
+    # for i in range(len(yx)):
+    #     yt.append( (np.linalg.norm([yx[i],yy[i],yz[i]])))
 
     
-    axs[0].plot(timestamp_us_0_vehicule, yx, label='Ax' )
-    axs[0].plot(timestamp_us_0_vehicule, yy, label='Ay')
-    axs[0].plot(timestamp_us_0_vehicule, yz, label='Az')
-    axs[1].plot(timestamp_us_0_vehicule, yt, label='A_tot')
+    fig, axs = plt.subplots(6, sharex=True , figsize=[14,9]) #6
 
-    axs[2].plot(df['timestamp_s_0'], df['pitch'], label='Pitch')
-    axs[3].plot(df['timestamp_s_0'], df['roll'], label='Roll')
+    
+    axs[0].plot(df_G['timestamp_s_0'], df_G['accel_x'], label='Accel_x' )
+#   axs[0].plot(timestamp_us_0_vehicule, yx, label='Ax')
+    axs[0].plot(df_G['timestamp_s_0'], df_G['accel_y'], label='Accel_y')
+#   axs[0].plot(timestamp_us_0_vehicule, yy, label='Ay')
+    axs[0].plot(df_G['timestamp_s_0'], df_G['accel_z'], label='Accel_z')
+#   axs[0].plot(timestamp_us_0_vehicule, yz, label='Az')
 
-    axs[4].plot(df['timestamp_s_0'], df['yaw'], label='Raw')
-    axs[5].plot(df['timestamp_s_0'], df['rpm'], label='Rpm')
+#   axs[1].plot(timestamp_us_0_vehicule, yt, label='A_tot')
+    axs[1].plot(df_G['timestamp_s_0'], df_G['accel_tot'], label='Accel_tot')
+
+    axs[2].plot(df_G['timestamp_s_0'], df_G['pitch'], label='Pitch')
+    axs[3].plot(df_G['timestamp_s_0'], df_G['roll'], label='Roll')
+
+    axs[4].plot(df_G['timestamp_s_0'], df_G['yaw'], label='Raw')
+    axs[5].plot(df_G['timestamp_s_0'], df_G['rpm'], label='Rpm')
 
     #Add title and lable for all graphs
 
@@ -285,8 +303,9 @@ if 1:
                     '5': {'title': 'Yaw speed', 'unit': 'rpm'}} 
 
     for key, value in dict_graph.items():
-        axs[int(key)].set_title(value['title'])
-        axs[int(key)].set_ylabel(value['unit'])
+        if int(key) < len(axs):   # in case display less graph for debuging
+            axs[int(key)].set_title(value['title'] + " [" + value['unit'] +']')
+            axs[int(key)].set_ylabel(value['unit'])
         
 
 
@@ -298,7 +317,7 @@ if 1:
 
     # sPecial details for graph
     axs[1].set_yticks(range(0,7,1) , minor=True)
-    axs[-1].set_xlabel("Time [s]")
+    axs[-1].set_xlabel("X axis = Time [s]   |  File: " + ulog_file_name)
 
     plt.legend()
     plt.tight_layout()
@@ -331,11 +350,9 @@ length_bar = -1
 transparent_video = True
 hide_axes = True
 name_output_mp4 = "anim_out_yaw.mp4"
-nb_frame_s = -1  # if -1 no resample
+nb_frame_s = 125  # if -1 no resample
 
-
-
-df_anim=df.copy()
+df_anim=df_G.copy()
 
 df_anim['x'] = length_bar * np.sin(df_anim['yaw0']) 
 df_anim['y'] = length_bar * np.cos(df_anim['yaw0']) 
@@ -344,27 +361,28 @@ df_anim['y'] = length_bar * np.cos(df_anim['yaw0'])
 df_anim['Datetime'] = pd.to_datetime(df_anim['timestamp_us_0']*1000)
 df_anim = df_anim.set_index('Datetime')
 
+#print(df_anim.head())
 
-print(df_anim.head())
-
-
-print("check for resampling parameters: ")
+print("\nResampling : ")
+print(" check for resampling parameters: ")
+t_resample_0 = time.time()
 if nb_frame_s >0:
-    print("resampling ... ")
+    print(" yes resampling , nb_frame_s : " + str(nb_frame_s))
     time_between_frame_ms = 1/nb_frame_s*1000
     nb_frame_s_final = nb_frame_s
     time_gap = str(time_between_frame_ms) + 'ms'
     #df_anim_r = df_anim.resample(time_gap).interpolate(method='linear')
     df_anim_r = df_anim.resample(time_gap).last()
 else:
-    print("not resampling ... ")
+    print(" not resampling")
     df_anim_r = df_anim.copy()
     time_between_frame_ms = df_anim_r['delay_log'].mean()/1000
     nb_frame_s_final = 1 / time_between_frame_ms *1000
 
+t_resample_1 = time.time()
+print(" Resampling took : " + timer(t_resample_0,t_resample_1)) 
 
-
-print(df_anim_r.head())
+#print(df_anim_r.head())
 
 #%% PLOT RAW AND RESAMPLE WITH MATPLOTLIB
 if 1:
@@ -381,7 +399,7 @@ if 1:
     plt.show()
 
 #%% Animation
-print("\n Starting animation... \n")
+print("\nAnimation :")
 
 if 1:
 
@@ -391,22 +409,22 @@ if 1:
     nb_frame_tot = len(df_anim_r.index)
 
     #summary parameters:
-    print('nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
-    print('nb_frame_s_final: ' +str(nb_frame_s_final))
-    print('nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s_final))
-    print("transparent_video : " + str(transparent_video))
-    print("hide_axes : " + str(hide_axes))
+    print(' nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
+    print(' nb_frame_s_final: ' +str(nb_frame_s_final))
+    print(' nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s_final))
+    print(' transparent_video : " + str(transparent_video))
+    print(' hide_axes : " + str(hide_axes))
 
     # Here you Can specify a start row and a end row , to debug:
     start = 5000
-    end = None
+    end = len(df_anim_r.index) - start -1  # 
 
     #Creating the figure
     fig = plt.figure()
     ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
                         xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
     line, = ax.plot([], [], 'o-', lw=2)
-    time_text = ax.text(0.02, 0.05, '', transform=ax.transAxes ,color='green')
+    time_text = ax.text(0.03, -0.08, '', transform=ax.transAxes ,color='green', bbox=dict(facecolor='yellow', alpha=0.5))
 
     x = df_anim_r['x'][start:end]
 
@@ -434,8 +452,20 @@ if 1:
 
     #animation function:
     def animate(i): 
+        i_rpm = df_anim_r['rpm'][start+i] 
+        i_nb_g = df_anim_r['accel_tot'][start+i]
+        i_nb_g_theo = 0.00001118 * Rotor_Radius * i_rpm * i_rpm  # G-Force = 0.00001118 x Rotor Radius [cm] x (RPM)²
+        i_time_video =  int(i)*(time_between_frame_ms/1000)
+        i_time_graph = (df_anim_r['timestamp_s_0'][start+i])
 
-        time_text.set_text('time = %.3fs ,\n rpm =  %.3f' % ((int(i)*time_between_frame_ms/1000) ,df_anim_r['rpm'][i] )) #TODO Rmp not working
+        time_text.set_text('rpm =  %.1f \nnb_g =  %.2f (theo: %.2f) \nvideo_time[s] :%.2f ,graph_time [s] : %.2f'
+         % (
+         i_rpm
+         ,i_nb_g 
+         ,i_nb_g
+         ,i_time_video
+         ,i_time_graph
+         )) #TODO Rmp not working
         xlist = [0, x[i]]
         ylist = [0, y[i]]
 
@@ -452,7 +482,7 @@ if 1:
 
 
     # Display animation
-    if 1 :   
+    if 0 :   
         print("\n displaying animation ...")                       
         plt.show()
 
@@ -466,7 +496,10 @@ if 1:
 
         ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
 print("End with Ulog file : " + str(ulog_file_name))
-print("------ END ------") 
+t1 = time.time()
+
+print("------ END ------ ") 
+print("Total_time : " + timer(t0,t1)) 
 
 
 
