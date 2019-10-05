@@ -101,7 +101,7 @@ def load_ulog_file(file_name):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'sample_log/run_heli/log_21_2019-9-29-15-11-32_heli_fast.ulg'
+ulog_file_name = 'sample_log/run_heli2/log_29_2019-10-4-21-47-32.ulg'
 Reload_file = True
 gravity = 9.80665 #m·s-2
 
@@ -130,6 +130,13 @@ if Reload_file:
     yaw = vehicle_attitude.data['yaw']
     yaw_rate = vehicle_attitude.data['yawspeed']
 
+    # Second data
+    timestamp_us_local = vehicle_local_position.data['timestamp']
+    timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
+    accel_x = vehicle_local_position.data['ax'] / gravity 
+    accel_y = vehicle_local_position.data['ay'] / gravity
+    accel_z = vehicle_local_position.data['az'] / gravity
+
     #Info Log
     print("\nInfo_log: ")
     sd_log = ulog.initial_parameters["SDLOG_PROFILE"]
@@ -144,6 +151,15 @@ if Reload_file:
     df = pd.DataFrame(data) 
     df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz 
     df['timestamp_s_0'] = df['timestamp_us_0']/1000000
+
+    #Create Dataframe 2
+    data2 = {'timestamp':timestamp_us_local,'accel_x':accel_x, 'accel_y':accel_y, 'accel_z':accel_z}
+    df2 = pd.DataFrame(data2)
+
+    #Merging the two dataframe
+    df_G=pd.merge(df, df2, on="timestamp" ,how='left')
+
+
     print("Writing : df_ulog.pkl ")
     df.to_pickle("df_ulog.pkl")
 else:
@@ -232,10 +248,10 @@ if 0:
     plt.tight_layout()
     plt.show()
 
-## GENERAL PLOT
+#%% GENERAL PLOT
 if 1:
-    timestamp_us_vehicule = vehicle_local_position.data['timestamp']
-    timestamp_us_0_vehicule = [(timestamp_us_vehicule[i] - timestamp_us_vehicule[0])/1000000 for i in range(len(timestamp_us_vehicule))]
+    timestamp_us_local = vehicle_local_position.data['timestamp']
+    timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
     yx = vehicle_local_position.data['ax'] / gravity 
     yy = vehicle_local_position.data['ay'] / gravity
     yz = vehicle_local_position.data['az'] / gravity
@@ -367,7 +383,7 @@ if 1:
 #%% Animation
 print("\n Starting animation... \n")
 
-if 0:
+if 1:
 
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
@@ -419,7 +435,7 @@ if 0:
     #animation function:
     def animate(i): 
 
-        time_text.set_text('time = %.3fs' % (int(i)*time_between_frame_ms/1000))
+        time_text.set_text('time = %.3fs ,\n rpm =  %.3f' % ((int(i)*time_between_frame_ms/1000) ,df_anim_r['rpm'][i] )) #TODO Rmp not working
         xlist = [0, x[i]]
         ylist = [0, y[i]]
 
@@ -436,7 +452,7 @@ if 0:
 
 
     # Display animation
-    if 0 :   
+    if 1 :   
         print("\n displaying animation ...")                       
         plt.show()
 
