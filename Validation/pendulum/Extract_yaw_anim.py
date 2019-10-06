@@ -106,10 +106,10 @@ def load_ulog_file(file_name):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'sample_log/run_heli2/log_27_2019-10-4-21-38-06.ulg'
-Reload_file = False
+ulog_file_name = 'sample_log/run_heli2/log_29_2019-10-4-21-47-32.ulg'
+Reload_file = True
 gravity = 9.80665 #m·s-2
-Rotor_Radius = 34#[cm]
+Rotor_Radius = 16.5 #[cm]
 
 name_df_input= 'df_ulog_yaw.pkl'
 
@@ -188,7 +188,7 @@ print(df_G )
 start_cal_s = 5
 end_cal_s = 10
 
-start_yaw_angle_deg = -10.8  #degrees
+start_yaw_angle_deg = -91.6  #degrees
 start_yaw_angle = math.radians(start_yaw_angle_deg)  #convert to Rad
 
 mask = (df_G['timestamp_s_0'] > start_cal_s) & (df_G['timestamp_s_0'] <= end_cal_s)
@@ -262,6 +262,7 @@ if 0:
 
 #%% GENERAL PLOT
 if 1:
+    print("Plotting General matplotlib: ")
     # # In case of relaod file , and for debugging , plot the log accel , not the interpolated one
     # timestamp_us_local = vehicle_local_position.data['timestamp']
     # timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
@@ -347,7 +348,7 @@ if 0:
 
 #Animation Parameters:
 length_bar = -1
-transparent_video = True
+transparent_video = False
 hide_axes = True
 name_output_mp4 = "anim_out_yaw.mp4"
 nb_frame_s = 125  # if -1 no resample
@@ -385,7 +386,7 @@ print(" Resampling took : " + timer(t_resample_0,t_resample_1))
 #print(df_anim_r.head())
 
 #%% PLOT RAW AND RESAMPLE WITH MATPLOTLIB
-if 1:
+if 0:
 
     plt.xlabel('Time 0')
 
@@ -406,18 +407,20 @@ if 1:
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
 
-    nb_frame_tot = len(df_anim_r.index)
+    # Here you Can specify a start row and a end row , to debug:
+    start = 5000
+    #end = len(df_anim_r.index) - start -1  # 
+    end = None 
 
-    #summary parameters:
+    nb_frame_tot = len(df_anim_r.index) - start
+     #summary parameters:
     print(' nb_frame_s: '+ str(nb_frame_s)+ ' \t Time_between_frame_ms: ' + str(time_between_frame_ms))
     print(' nb_frame_s_final: ' +str(nb_frame_s_final))
     print(' nb_frame_tot: '+ str(nb_frame_tot)+ ' \t Total time (s): ' + str(nb_frame_tot/nb_frame_s_final))
-    print(' transparent_video : " + str(transparent_video))
-    print(' hide_axes : " + str(hide_axes))
+    print(' transparent_video : ' + str(transparent_video))
+    print(' hide_axes : ' + str(hide_axes))
 
-    # Here you Can specify a start row and a end row , to debug:
-    start = 5000
-    end = len(df_anim_r.index) - start -1  # 
+
 
     #Creating the figure
     fig = plt.figure()
@@ -462,10 +465,11 @@ if 1:
          % (
          i_rpm
          ,i_nb_g 
-         ,i_nb_g
+         ,i_nb_g_theo
          ,i_time_video
          ,i_time_graph
          )) #TODO Rmp not working
+
         xlist = [0, x[i]]
         ylist = [0, y[i]]
 
@@ -482,7 +486,7 @@ if 1:
 
 
     # Display animation
-    if 0 :   
+    if 1 :   
         print("\n displaying animation ...")                       
         plt.show()
 
@@ -491,10 +495,10 @@ if 1:
         print("\n saving animation to file : " + str(name_output_mp4)) 
         # Set up formatting for the movie files
         Writer = anim.writers['ffmpeg']
-        writer = Writer(fps = nb_frame_s_final, metadata = dict(title='Validation Video'), extra_args=['-loglevel', 'verbose'], bitrate = 1800 , codec = mCodec)
+        writer = Writer(fps = nb_frame_s_final, metadata = dict(title='Validation Video'), bitrate = 1800 , codec = mCodec)
 
 
-        ani.save(name_output_mp4, writer = writer ,savefig_kwargs = mKarg_writter)
+        ani.save(name_output_mp4,writer = writer)
 print("End with Ulog file : " + str(ulog_file_name))
 t1 = time.time()
 
