@@ -21,13 +21,13 @@ from model.import_ulog import ulog_to_df , ulog_list_data
 ############################# DEFINITIONS #############################
 
 def id_generator(msize=6, chars=string.ascii_uppercase + string.digits):  
-        """ Generate a random ID .
+    """ Generate a random ID .
 
     Parameters:
         msize (str): length of the random string.
         chars (list of string): the list of the possible characters
 
-    Returns:
+    :Returns:
         id_str(str): the random string   
     """
 
@@ -41,7 +41,7 @@ def sha256sum(filename):
     Parameters:
         filename (str):The file path.
 
-    Returns:
+    :Returns:
         sha(str): tHe sha256 hars string   
     """
     # compute the SH256 of the file  to identify possible duplicated source file.
@@ -146,5 +146,5 @@ class Data_File():
 
     def list_avalable_data(self):
           if self.device == Device.PIXRACER:
-           self.df = ulog_list_data(self.file_path)
+           return ulog_list_data(self.file_path)
 

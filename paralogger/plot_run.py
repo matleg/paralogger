@@ -100,12 +100,14 @@ else:
 print(mflight )
 
 #%%
-mflight.data[0].list_avalable_data()
-#%% Plot
-mdf = mflight.get_df_by_position(Position.PILOT)
-print(mflight )
+df_data = mflight.data[0].list_avalable_data()
+print(df_data)
 
-print(print(mflight ) )
+#%% Plot
+# mdf = mflight.get_df_by_position(Position.PILOT)
+# print(mflight )
+
+
 logger.info(" --- END ----")
 
 

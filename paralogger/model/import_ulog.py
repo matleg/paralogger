@@ -42,19 +42,25 @@ def load_ulog_file(file_name):
     # (re)loaded on each page request. Thus the caching would not work there.
 
     # load only the messages we really need
-    msg_filter = ['battery_status', 'distance_sensor', 'estimator_status',
+    msg_filter = ['battery_status', 'estimator_status',
                   'sensor_combined', 'cpuload',
                   'vehicle_gps_position', 'vehicle_local_position',
-                  'vehicle_local_position_setpoint',
-                  'vehicle_global_position', 'actuator_controls_0',
-                  'actuator_controls_1', 'actuator_outputs',
-                  'vehicle_angular_velocity', 'vehicle_attitude', 'vehicle_attitude_setpoint',
-                  'vehicle_rates_setpoint', 'rc_channels', 'input_rc',
-                  'position_setpoint_triplet', 'vehicle_attitude_groundtruth',
-                  'vehicle_local_position_groundtruth', 'vehicle_visual_odometry',
-                  'vehicle_status', 'airspeed', 'manual_control_setpoint',
+                  'vehicle_global_position', 'vehicle_attitude', 
+                  'vehicle_rates_setpoint', 
+                  'vehicle_attitude_groundtruth',
+                  'vehicle_local_position_groundtruth', 
+                  'vehicle_status', 'airspeed', 
                   'rate_ctrl_status', 'vehicle_air_data',
-                  'vehicle_magnetometer', 'system_power', 'tecs_status']
+                  'vehicle_magnetometer', 'system_power']
+
+                  # has been removed , because useless:
+                  #     position_setpoint_triplet
+                  #     'actuator_controls_1' ,'actuator_controls_0','actuator_outputs'
+                  #     distance_sensor
+                  #     'vehicle_local_position_setpoint', 'vehicle_angular_velocity','vehicle_attitude_setpoint' 
+                  #     'tecs_status'
+                  #     'rc_channels', 'input_rc',
+                  #     'manual_control_setpoint','vehicle_visual_odometry'
     try:
         ulog = ULog(file_name, msg_filter, disable_str_exceptions=False)
     except FileNotFoundError:
@@ -89,8 +95,28 @@ def ulog_list_data(file_path):
     logger.info("\n Ulog ulog_list_data: " +str(file_path))
 
     ulog = load_ulog_file(file_path)
-    for cat in ulog.data_list:
-        print(cat.name)
+    print(ulog)
+
+    time_s= int((ulog.last_timestamp - ulog.start_timestamp)/1e6)
+    print("time_s: ",time_s)
+
+    data = []
+    data_list_sorted = sorted(ulog.data_list, key=lambda d: d.name + str(d.multi_id))
+    for d in data_list_sorted:
+        parent_id = "{:}".format(d.name)
+        for d2 in d.data:
+            try:
+                size = d.data[d2].size
+                avg = np.mean(d.data[d2])
+                std = np.std(d.data[d2])
+            except:
+                print("")
+
+            name_id = "{:}".format(d2)
+            data.append(dict({'parent': parent_id, 'name':name_id, 'size':size ,'frequency':size / time_s , 'avg':avg ,'std':std }))
+
+    df = pd.DataFrame(data)
+    return df
 
 
 
