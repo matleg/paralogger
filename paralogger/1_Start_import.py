@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-Created plot for visualising ulog
+Created a pickle file from ulog from other use
 
 Fred
 12/10/2019
@@ -28,7 +28,7 @@ logger = logging.getLogger()
 #logging.basicConfig(filename='1_import.log',level=logging.DEBUG)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(module)s :: %(funcName)s ::  %(message)s')
-file_handler = RotatingFileHandler('plot_run.log', 'a', 1000000, 1)
+file_handler = RotatingFileHandler('1_Start_import.log', 'a', 1000000, 1)
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
@@ -93,7 +93,7 @@ if Reload_file:
 
 else:
     logger.info("Reading : " + name_saved_file)
-    with open(name_saved_file) as f:
+    with open(name_saved_file , 'rb') as f:
         mflight = pickle.load(f)
 
 # Print the input Dataframe. 
@@ -111,6 +111,7 @@ print(mdf )
 
 logger.info(" --- END ----")
 
+print("END")
 
 
 #%%
