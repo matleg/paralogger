@@ -106,8 +106,7 @@ print(df_data)
 
 #%% Plot
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
-print(mdf )
-
+print (mdf)
 
 logger.info(" --- END ----")
 
