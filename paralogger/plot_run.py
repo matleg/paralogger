@@ -102,10 +102,11 @@ print(mflight )
 #%%
 df_data = mflight.data[0].list_avalable_data()
 print(df_data)
+# df_data.loc[df_data['parent']=='vehicle_local_position']
 
 #%% Plot
-# mdf = mflight.get_df_by_position(Position.PILOT)
-# print(mflight )
+mdf = mflight.get_df_by_position(Position.PILOT)[0]
+print(mdf )
 
 
 logger.info(" --- END ----")

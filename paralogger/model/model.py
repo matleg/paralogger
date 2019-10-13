@@ -14,9 +14,23 @@ logger = logging.getLogger("model")
 #Local imports:
 
 from model.list_param import Device,Position
-from model.import_ulog import ulog_to_df , ulog_list_data
+from model.import_ulog import ulog_to_df , ulog_list_data , ulog_param
 
+############################# DECORATOR #############################
 
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()       
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            logger.info('%r  %2.2f s' % \
+                  (method.__name__, (te - ts) ))
+        return result    
+    return timed
 
 ############################# DEFINITIONS #############################
 
@@ -81,10 +95,11 @@ class Flight():
 
         self.version = 1 # version of the data model
 
-
+    @timeit
     def add_data_file(self, mfilePath , mdevice , mposition ):
         mData_File= Data_File( mfilePath , mdevice , mposition)
         mData_File.populate_df()
+        mData_File.populated_device_param()
 
         self.data.append(mData_File)
 
@@ -131,6 +146,7 @@ class Data_File():
         self.file_sha1 = None
         self.device = mdevice
         self.device_sn = None       # serial number of the devices
+        self.device_param = None
         self.position = mposition       # serial number of the devices
         
         self.df = None
@@ -145,6 +161,10 @@ class Data_File():
            self.df = ulog_to_df(self.file_path)
 
     def list_avalable_data(self):
-          if self.device == Device.PIXRACER:
+        if self.device == Device.PIXRACER:
            return ulog_list_data(self.file_path)
+
+    def populated_device_param(self):
+        if self.device == Device.PIXRACER:
+            self.device_param = ulog_param(self.file_path)
 

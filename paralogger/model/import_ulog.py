@@ -25,7 +25,7 @@ def timeit(method):
             name = kw.get('log_name', method.__name__.upper())
             kw['log_time'][name] = int((te - ts) * 1000)
         else:
-            print('%r  %2.2f s' % \
+            logger.info('%r  %2.2f s' % \
                   (method.__name__, (te - ts) ))
         return result    
     return timed
@@ -90,15 +90,18 @@ gravity = 9.80665 #m·s-2
 
 
 #################################################################
-
+@timeit
 def ulog_list_data(file_path):
+    """ Create a panada dataframe with all the record avaible,
+     the number and frequency.
+        """
     logger.info("\n Ulog ulog_list_data: " +str(file_path))
 
     ulog = load_ulog_file(file_path)
-    print(ulog)
+    logger.debug(ulog)
 
     time_s= int((ulog.last_timestamp - ulog.start_timestamp)/1e6)
-    print("time_s: ",time_s)
+    logger.info("time_s: ",time_s)
 
     data = []
     data_list_sorted = sorted(ulog.data_list, key=lambda d: d.name + str(d.multi_id))
@@ -120,61 +123,64 @@ def ulog_list_data(file_path):
 
 
 
+def ulog_param(file_path):
+    """ Extract all the parameters of the Ulog
+        """
+
+    logger.info("\n Ulog_param: " +str(file_path))
+    dict_param={}
+
+    ulog = load_ulog_file(file_path)
+
+    dict_param['initial_parameters'] = ulog.initial_parameters
+    dict_param['msg_info_dict'] = ulog.msg_info_dict
+    dict_param['logged_messages'] = ulog.logged_messages
+    dict_param['file_corruption'] = ulog.file_corruption
+    dict_param['logged_messages'] = ulog.logged_messages
+
+    return dict_param
 
 
-
-
+@timeit
 def ulog_to_df(file_path):
+    """ Created a Panda dataframe with all the interestion data
+        All the data are join by the timestamp
+        """
     logger.info("generated_dataFrame_Ulog from: " +str(file_path))
 
     ulog = load_ulog_file(file_path)
     px4_ulog = PX4ULog(ulog)
     px4_ulog.add_roll_pitch_yaw()
 
-    vehicle_attitude = ulog.get_dataset('vehicle_attitude')
-    vehicle_local_position = ulog.get_dataset('vehicle_local_position')
+    #Dict to list all the interesting parameters to extract
+    dict_param_to_get ={'vehicle_attitude' : ['timestamp','q[0]','q[1]','q[2]','q[3]','pitch','roll','yaw','yawspeed' ],
+                        'vehicle_local_position' : ['timestamp','x','y','z','ax','ay','az' ],   
+                        'vehicle_gps_position': ['timestamp','time_utc_usec','lat','lon','alt','alt_ellipsoid','hdop','vdop','fix_type','satellites_used' ],
+                        'vehicle_air_data' : ['timestamp','baro_alt_meter','baro_temp_celcius','baro_pressure_pa','rho' ] 
+    }
 
-    timestamp = vehicle_attitude.data['timestamp']  # in microsecond
-    timestamp_us_0 = [(timestamp[i] - timestamp[0]) for i in range(len(timestamp))]
+    df_G = pd.DataFrame(columns=['timestamp'])
+    # For each cetgory : vehicle_attitude ,vehicle_local_position , etc ..
+    for key in dict_param_to_get:
+        logger.info("fetching category: " + str(key))
 
-    pitch = vehicle_attitude.data['pitch']
-    roll = vehicle_attitude.data['roll']
-    yaw = vehicle_attitude.data['yaw']
-    yaw_rate = vehicle_attitude.data['yawspeed']
+        data_category = ulog.get_dataset(key)
 
-    # Second data
-    timestamp_us_local = vehicle_local_position.data['timestamp']
-    timestamp_us_0_vehicule = [(timestamp_us_local[i] - timestamp_us_local[0])/1000000 for i in range(len(timestamp_us_local))]
-    accel_x = vehicle_local_position.data['ax'] / gravity 
-    accel_y = vehicle_local_position.data['ay'] / gravity
-    accel_z = vehicle_local_position.data['az'] / gravity
+        data={ }
 
-    #Info Log
-    print("\nInfo_log: ")
-    sd_log = ulog.initial_parameters["SDLOG_PROFILE"]
-    print("SDLOG_Profile: ",sd_log)
+        # For data in cetgory : timestamp ,q[0] , etc ..
+        for param in dict_param_to_get[key]: 
+            logger.info("\t fetching data: " + str(param))
 
-    print("\nCreating Dataframe")
+            data[param] = data_category.data[param]
 
-    # intialise data of lists. 
-    data = {'timestamp':timestamp, 'timestamp_us_0':timestamp_us_0,'pitch':pitch, 'roll':roll, 'yaw':yaw , 'yaw_rate':yaw_rate} 
-    
-    # Create DataFrame 
-    df = pd.DataFrame(data) 
-    df['delay_log']=df['timestamp'].diff()  # Calculate the delay  between two records in micro second , around 4000 ms = 0.0004 so 250 hz 
-    df['timestamp_s_0'] = df['timestamp_us_0']/1000000
-
-    #Create Dataframe 2
-    data2 = {'timestamp':timestamp_us_local,'accel_x':accel_x, 'accel_y':accel_y, 'accel_z':accel_z}
-    df2 = pd.DataFrame(data2)
-
-    #Merging the two dataframe
-    df_G=pd.merge(df, df2, on="timestamp" ,how='left')
-
-    #interpolate Nan datas:
-    df_G['accel_x'].interpolate(method='polynomial', order=2 ,inplace=True)
-    df_G['accel_y'].interpolate(method='polynomial', order=2 ,inplace=True)
-    df_G['accel_z'].interpolate(method='polynomial', order=2 ,inplace=True)
-
+        # Create DataFrame 
+        dfi = pd.DataFrame(data) 
+        logger.debug('\n--------\n DF for : ' + str(key))
+        logger.debug(dfi)
+        
+        #Merge Datafrme
+        df_G=pd.merge(df_G, dfi, on="timestamp" ,how='outer')
+ 
     return df_G
 
