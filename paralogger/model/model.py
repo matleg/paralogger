@@ -168,3 +168,14 @@ class Data_File():
         if self.device == Device.PIXRACER:
             self.device_param = ulog_param(self.file_path)
 
+    def get_start_end_time(self):
+        '''
+        return the start and end timestamp in s 
+        '''
+        timestamp_start = self.df[ ~self.df['time_utc_usec'].isnull()].iloc[0]['time_utc_usec']/10**6
+        timestamp_end = self.df[ ~self.df['time_utc_usec'].isnull()].iloc[-1]['time_utc_usec']/10**6
+
+
+        return {'timestamp_start':timestamp_start,'timestamp_end':timestamp_end}
+       
+
