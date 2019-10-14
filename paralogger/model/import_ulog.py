@@ -181,6 +181,22 @@ def ulog_to_df(file_path):
         
         #Merge Datafrme
         df_G=pd.merge(df_G, dfi, on="timestamp" ,how='outer')
- 
+
+        print(df_G.info())
+
+
+        #Created a time 0 column
+     
+        df_G['time0_s']= (df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6  #timestamp are in micro second
+        
+
+        #move time 0 column to the begining of the table
+        time0s = df_G['time0_s']
+        df_G.drop(labels=['time0_s'], axis=1,inplace = True)
+        df_G.insert(1, 'time0_s', time0s)
+
+
+        #df_G.insert(1, 'time0_s',(df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6)
+
     return df_G
 
