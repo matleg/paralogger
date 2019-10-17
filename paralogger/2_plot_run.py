@@ -18,6 +18,7 @@ import numpy as np
 
 from model.model import Flight
 from model.list_param import Device , Position
+from model.anim_3d import Visualizer3D
 
 #from single_3d import plot_single
 
@@ -94,12 +95,11 @@ with open(name_saved_file , 'rb') as f:
 # Print the input Dataframe. 
 print(mflight )
 
-#%% Plot
-
-# Prepare dataframe
+#%% Prepare dataframe
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
 df_plot = mdf.loc[mdf['x'].notnull()]
 
+#%% PLot still
 def plot_single(x,y,z,pitch,roll, yaw):
     print('in plot_single ')
        
@@ -134,8 +134,20 @@ def plot_single_row(num):
 
     plot_single(x, y, z, p, r, y)
 
-plot_single_row(542)
+#plot_single_row(542)
 
+#%% PLot3D
+
+v = Visualizer3D()
+t_start=50
+t_end=110
+
+mask = (df_plot['time0_s'] > t_start) & (df_plot['time0_s'] <= t_end)
+df_plot_sel = df_plot.loc[mask]
+
+v.animation(df_plot_sel,True)
+
+#%% End
 logger.info(" --- END ----")
 
 print("END")

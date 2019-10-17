@@ -12,22 +12,32 @@ import sys
 import os
 os.environ['DISPLAY']=':0'
 
-mouv =  [[2,1,2,0,45, 45],
-        [2,1,2,0,45, 46],
-        [2,1,2,0,45, 47],
-        [2,1,2,0,45, 48],
-        [2,1,2,0,45, 49],
-        [2,1,2,0,46, 50],
-        [2,1,2,0,46, 51],
-        [2,1,2,0,46, 52],
-        [2,1,2,0,46, 53]]
-
 
 
 #m1 = gl.GLMeshItem(meshdata=md, smooth=False, drawFaces=False, drawEdges=True, edgeColor=(1,1,0,1)) 
+def convert_df_2_data( mdf):
 
+    mdf[['pitch', 'yaw','roll']] = mdf[['pitch', 'yaw','roll']].apply(np.rad2deg)
 
-class Visualizer(object):
+    data_table = mdf[['x','y','z','pitch','roll','yaw']].to_numpy()
+    return data_table 
+
+def calculate_average_time( mdf):
+    duration = mdf.iloc[-1]['time0_s']-mdf.iloc[0]['time0_s']
+    nb_record = len(mdf)
+    average_step_time = duration / nb_record
+
+    print('average_step_time',average_step_time)
+
+    return average_step_time
+
+def extract_path_track(mdf):
+    print("add_path_track " )
+    data_track = mdf[['x','y','z']].to_numpy()
+
+    return data_track
+
+class Visualizer3D(object):
 
     def __init__(self ):
         self.traces = dict()
@@ -39,10 +49,12 @@ class Visualizer(object):
         self.w.show()
 
         self.data = None
-
+        self.track = None
+        self.track_is_ploted =False
         self.index = 0
 
-        self.md = gl.MeshData.cylinder(rows=10, cols=20, radius=[2.0, 2.0], length=5.)
+        #Created the geometrie
+        self.md = gl.MeshData.cylinder(rows=10, cols=20, radius=[1.0, 1.0], length=3.)
 
         self.geom = gl.GLMeshItem(meshdata=self.md, smooth=False, drawFaces=False, drawEdges=True, edgeColor=(1,1,0,1)) 
 
@@ -59,18 +71,8 @@ class Visualizer(object):
         gz.translate(0, 0, -10)
         self.w.addItem(gz)
 
-        self.n = 15
-
-       
-        #for i in range(self.n):
-        print("in vizuliaser")
-
-        # m1.translate(mouv[0][0],mouv[0][1],mouv[0][2])
-        # m1.rotate(mouv[0][3],0,1,0)
-        # m1.rotate(mouv[0][4],1,0,0)
-        # m1.rotate(mouv[0][5],0,0,1)
-
-        #self.w.addItem(m1)
+ 
+    
 
     def start(self):
         if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
@@ -78,14 +80,13 @@ class Visualizer(object):
     
   
     def update(self):
-        global m1 #,index
-        print("in update : " + str(self.index))
                 
         self.index = (self.index + 1) % len(self.data)
 
-        i= self.index
+        i= self.index 
+        if i ==0 :
+            print("loop animation ")
         
-
         self.geom.resetTransform()
         self.geom.translate(self.data[i][0],self.data[i][1],self.data[i][2])
         self.geom.rotate(self.data[i][3],0,1,0)
@@ -94,17 +95,36 @@ class Visualizer(object):
 
         self.w.addItem(self.geom)
 
+        
+        # Add track if exist:
+        if self.track is not None and not self.track_is_ploted:
+            print("ploting track")
+            plt = gl.GLLinePlotItem(pos=self.track,  width=(i+1)/10., antialias=True)
+            self.w.addItem(plt)
+            self.track_is_ploted = True
 
-    def animation(self, mdata):
-        self.data = mdata
+
+    def animation(self, mdata, plot_track):
+
+        print('total records:' + str(len(mdata)))
+        self.data = convert_df_2_data(mdata)
+
+        if plot_track:
+            self.track = extract_path_track(mdata)
 
         timer = QtCore.QTimer()
         timer.timeout.connect(self.update)
-        timer.start(30)
+        step_interval = calculate_average_time(mdata)*100
+        print('step time ms:',step_interval)
+
+        timer.start(step_interval)
+
+
+
         self.start()
 
 
 # Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    v = Visualizer()
-    v.animation(mouv)
+    v = Visualizer3D()
+    v.animation()
