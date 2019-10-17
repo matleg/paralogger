@@ -12,7 +12,7 @@ import sys
 import os
 os.environ['DISPLAY']=':0'
 
-mouv=  [[2,1,2,0,45, 45],
+mouv =  [[2,1,2,0,45, 45],
         [2,1,2,0,45, 46],
         [2,1,2,0,45, 47],
         [2,1,2,0,45, 48],
@@ -29,7 +29,7 @@ mouv=  [[2,1,2,0,45, 45],
 
 class Visualizer(object):
 
-    def __init__(self):
+    def __init__(self ):
         self.traces = dict()
         self.app = QtGui.QApplication(sys.argv)
         self.w = gl.GLViewWidget()
@@ -37,6 +37,8 @@ class Visualizer(object):
         self.w.setWindowTitle('3D view track')
         self.w.setGeometry(0, 110, 1920, 1080)
         self.w.show()
+
+        self.data = None
 
         self.index = 0
 
@@ -79,21 +81,23 @@ class Visualizer(object):
         global m1 #,index
         print("in update : " + str(self.index))
                 
-        self.index = (self.index + 1) % len(mouv)
+        self.index = (self.index + 1) % len(self.data)
 
         i= self.index
         
 
         self.geom.resetTransform()
-        self.geom.translate(mouv[i][0],mouv[i][1],mouv[i][2])
-        self.geom.rotate(mouv[i][3],0,1,0)
-        self.geom.rotate(mouv[i][4],1,0,0)
-        self.geom.rotate(mouv[i][5],0,0,1)
+        self.geom.translate(self.data[i][0],self.data[i][1],self.data[i][2])
+        self.geom.rotate(self.data[i][3],0,1,0)
+        self.geom.rotate(self.data[i][4],1,0,0)
+        self.geom.rotate(self.data[i][5],0,0,1)
 
         self.w.addItem(self.geom)
 
 
-    def animation(self):
+    def animation(self, mdata):
+        self.data = mdata
+
         timer = QtCore.QTimer()
         timer.timeout.connect(self.update)
         timer.start(30)
@@ -103,4 +107,4 @@ class Visualizer(object):
 # Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
     v = Visualizer()
-    v.animation()
+    v.animation(mouv)
