@@ -88,10 +88,13 @@ class Visualizer3D(object):
             print("loop animation ")
         
         self.geom.resetTransform()
-        self.geom.translate(self.data[i][0],self.data[i][1],self.data[i][2])
+        # Important  to rotate before translated
         self.geom.rotate(self.data[i][3],0,1,0)
         self.geom.rotate(self.data[i][4],1,0,0)
         self.geom.rotate(self.data[i][5],0,0,1)
+
+        self.geom.translate(self.data[i][0],self.data[i][1],self.data[i][2])
+     
 
         self.w.addItem(self.geom)
 
@@ -99,7 +102,7 @@ class Visualizer3D(object):
         # Add track if exist:
         if self.track is not None and not self.track_is_ploted:
             print("ploting track")
-            plt = gl.GLLinePlotItem(pos=self.track,  width=(i+1)/10., antialias=True)
+            plt = gl.GLLinePlotItem(pos=self.track,   antialias=True)
             self.w.addItem(plt)
             self.track_is_ploted = True
 
