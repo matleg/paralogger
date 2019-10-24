@@ -8,10 +8,17 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 import sys
+import itertools
+from model.geometry_modeling import Create_geom 
+# import pkg_resources
 
 import os
 os.environ['DISPLAY']=':0'
 
+# resource_package = __name__ 
+
+# def get_source_name(file_path_name):
+#     return pkg_resources.resource_filename(resource_package,file_path_name)
 
 
 #m1 = gl.GLMeshItem(meshdata=md, smooth=False, drawFaces=False, drawEdges=True, edgeColor=(1,1,0,1)) 
@@ -43,7 +50,7 @@ class Visualizer3D(object):
         self.traces = dict()
         self.app = QtGui.QApplication(sys.argv)
         self.w = gl.GLViewWidget()
-        self.w.opts['distance'] = 80
+        self.w.opts['distance'] = 160
         self.w.setWindowTitle('3D view track')
         self.w.setGeometry(0, 110, 1920, 1080)
         self.w.show()
@@ -54,9 +61,9 @@ class Visualizer3D(object):
         self.index = 0
 
         #Created the geometrie
-        self.md = gl.MeshData.cylinder(rows=10, cols=20, radius=[1.0, 1.0], length=3.)
+ 
+        self.geom= Create_geom.obj("3D_model/simple_body.obj")  
 
-        self.geom = gl.GLMeshItem(meshdata=self.md, smooth=False, drawFaces=False, drawEdges=True, edgeColor=(1,1,0,1)) 
 
         # create the background grids
         gx = gl.GLGridItem()
@@ -86,6 +93,7 @@ class Visualizer3D(object):
         i= self.index 
         if i ==0 :
             print("loop animation ")
+        
         
         self.geom.resetTransform()
         # Important  to rotate before translated
