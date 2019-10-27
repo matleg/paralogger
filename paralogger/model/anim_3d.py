@@ -179,9 +179,9 @@ class Visualizer3D(object):
         
         self.geom.resetTransform()
         # Important  to rotate before translated
-        # self.geom.rotate(self.data[i][6],0,1,0)
-        # self.geom.rotate(self.data[i][7],1,0,0)
-        # self.geom.rotate(self.data[i][8],0,0,1)
+        self.geom.rotate(self.data[i][6],0,1,0)
+        self.geom.rotate(self.data[i][7],1,0,0)
+        self.geom.rotate(self.data[i][8],0,0,1)
 
         self.geom.translate(self.data[i][3],self.data[i][4],self.data[i][5])
      
