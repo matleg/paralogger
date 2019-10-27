@@ -80,7 +80,7 @@ app = QtGui.QApplication([])
 
 #%% PARAMETERS 
 gravity = 9.80665 #m·s-2
-name_saved_file= 'mflight_plot.pkl'
+name_saved_file= 'mflight_plot_car2.pkl'
 
 
 #%%  Prepare file 
@@ -93,11 +93,13 @@ with open(name_saved_file , 'rb') as f:
     mflight = pickle.load(f)
 
 # Print the input Dataframe. 
-print(mflight )
+#print(mflight )
 
 #%% Prepare dataframe
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
-df_plot = mdf.loc[mdf['x'].notnull()]
+df_plot = mdf.loc[mdf['lat'].notnull()]
+
+print("Time0_s range: " + str(df_plot['time0_s'].min()) + " : " + str(df_plot['time0_s'].max()))
 
 #%% PLot still
 def plot_single(x,y,z,pitch,roll, yaw):
@@ -139,12 +141,13 @@ def plot_single_row(num):
 #%% PLot3D
 
 v = Visualizer3D()
-t_start=50
-t_end=110
+t_start=20
+t_end=100
 
 mask = (df_plot['time0_s'] > t_start) & (df_plot['time0_s'] <= t_end)
 df_plot_sel = df_plot.loc[mask]
 
+#%%
 v.animation(df_plot_sel,True)
 
 #%% End
