@@ -190,6 +190,7 @@ def ulog_to_df(file_path):
         df_G['roll'].interpolate(method='linear',inplace=True)
         df_G['yaw'].interpolate(method='linear',inplace=True)
 
+
         print(df_G.info())
 
 
