@@ -1,6 +1,0 @@
-{
-    "python.pythonPath": "/home/mat/programming/paralogger/venv/bin/python3.7",
-    "python.linting.pylintEnabled": true,
-    "python.linting.pycodestyleEnabled": false,
-    "python.linting.enabled": true
-}
