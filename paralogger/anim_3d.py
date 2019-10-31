@@ -130,16 +130,14 @@ def extract_path_track(mdf):
 
 
 class Visualizer3D(object):
-    def __init__(self):
+    def __init__(self, parent):
         self.traces = dict()
         self.app = QtGui.QApplication(sys.argv)
-        self.window = QWidget()
 
-        self.w = gl.GLViewWidget(parent=self.window)
+        self.w = gl.GLViewWidget(parent=parent)
         self.w.opts["distance"] = 160
         self.w.setWindowTitle("3D view track")
         self.w.setGeometry(0, 110, 720, 480)
-        self.window.show()
 
         self.data = None
         self.track = None
