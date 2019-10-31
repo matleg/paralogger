@@ -1,6 +1,0 @@
-{
-    "python.pythonPath": "/home/fred/anaconda3/envs/paralogger/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.pep8Enabled": false,
-    "python.linting.enabled": true
-}
