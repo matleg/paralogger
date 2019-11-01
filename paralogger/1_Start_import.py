@@ -66,12 +66,12 @@ def timer(start,end):
 
 #%% PARAMETERS 
 
-ulog_file_name = 'samples/log_23_2019-9-29-15-15-10_heli_slow.ulg'
+ulog_file_name = 'samples/log_6_2019-10-27-13-59-46.ulg'
 Reload_file = True
 gravity = 9.80665 #m·s-2
 
 
-name_saved_file= 'mflight_plot.pkl'
+name_saved_file= 'mflight_plot_car2.pkl'
 
 
 #%%  Prepare file 
@@ -106,8 +106,7 @@ print(df_data)
 
 #%% Plot
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
-print(mdf )
-
+print (mdf)
 
 logger.info(" --- END ----")
 

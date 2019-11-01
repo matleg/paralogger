@@ -181,6 +181,14 @@ def ulog_to_df(file_path):
         
         #Merge Datafrme
         df_G=pd.merge(df_G, dfi, on="timestamp" ,how='outer')
+        
+        df_G.sort_values('timestamp',inplace=True)
+
+        #interpolated some misinsg value 
+        #euler angle
+        df_G['pitch'].interpolate(method='linear',inplace=True)
+        df_G['roll'].interpolate(method='linear',inplace=True)
+        df_G['yaw'].interpolate(method='linear',inplace=True)
 
         print(df_G.info())
 

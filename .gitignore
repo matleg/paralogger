@@ -107,3 +107,7 @@ paralogger/samples/csv/
 
 # IDE
 .vscode
+
+paralogger/samples/csv/
+
+*.pkl
