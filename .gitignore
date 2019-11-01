@@ -105,4 +105,5 @@ venv.bak/
 
 paralogger/samples/csv/
 
-*.pkl
+# IDE
+.vscode
