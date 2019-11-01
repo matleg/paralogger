@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "1_start_import",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/fred/Ozone/paralogger/paralogger/1_Start_import.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "2_plot_run",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/fred/Ozone/paralogger/paralogger/2_plot_run.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
