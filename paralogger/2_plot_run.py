@@ -142,7 +142,7 @@ def plot_single_row(num):
 
 v = Visualizer3D()
 t_start=20
-t_end=100
+t_end=160
 
 mask = (df_plot['time0_s'] > t_start) & (df_plot['time0_s'] <= t_end)
 df_plot_sel = df_plot.loc[mask]
@@ -164,3 +164,4 @@ if __name__ == '__main__':
 
 
 #%%
+#https://review.px4.io/plot_app?log=b216a330-3666-4f6b-bc7f-b823be7d3ef5
