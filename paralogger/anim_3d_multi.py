@@ -102,11 +102,11 @@ def convert_df_2_data(mdf):
     lat, lon = map_projection(lat, lon, anchor_lat, anchor_lon)
     lat = lat - lat[0]
     lon = lon - lon[0]
-    altitude = altitude - altitude[0]
+    altitude0 = altitude - altitude[0]
 
     mdf["lat_m"] = lat
     mdf["lon_m"] = lon
-    mdf["alt_m"] = altitude
+    mdf["alt_m"] = altitude0
     data_table = mdf[
         ["x", "y", "z", "lat_m", "lon_m", "alt_m", "pitch", "roll", "yaw","time0_s"]
     ].to_numpy()
@@ -134,29 +134,43 @@ def add_plot(mdf , widget):
     color = (0,255,120)
 
     # %% Altitude  plot
-    altitude = mdf["alt"].to_numpy() / 1e3  # meters
+    start_altitude =mdf["alt"].iloc[0] /1e3
+    altitude = (mdf["alt"].to_numpy() / 1e3 )   -  start_altitude # meters
 
     p1 = widget.addPlot(title="Alt")
+
     p1.plot(mdf['time0_s'].to_numpy() , altitude, pen=color, name="Alt [m]")
-    p1.plot(mdf['time0_s'].to_numpy() , mdf['baro_alt_meter'].to_numpy(), pen=(0,255,0), name="baro_alt_meter")
+
+    # Set up an animated arrow 
+
+    arrow_alt = pg.ArrowItem(angle=90)
+    p1.addItem(arrow_alt)
 
     # %% Pitch  plot
-    pitch = mdf["pitch"].to_numpy() * -1
-    yaw = mdf["yaw"].to_numpy() * -1
+    pitch = mdf["pitch"].to_numpy()
+    yaw = mdf["yaw"].to_numpy() 
     roll = mdf["roll"].to_numpy()
 
-    pitch= np.rad2deg(pitch)
-    yaw= np.rad2deg(yaw)
-    roll= np.rad2deg(roll)
+    # pitch= np.rad2deg(pitch)
+    # yaw= np.rad2deg(yaw)
+    # roll= np.rad2deg(roll)
 
     p2 = widget.addPlot(title="Pitch")
     p2.plot(mdf['time0_s'].to_numpy() , pitch, pen=color, name="pitch [deg]")
+    arrow_pitch = pg.ArrowItem(angle=90)
+    p2.addItem(arrow_pitch)
 
     p3 = widget.addPlot(title="roll")
     p3.plot(mdf['time0_s'].to_numpy() , roll, pen=color, name="roll [deg]")
+    arrow_roll = pg.ArrowItem(angle=90)
+    p3.addItem(arrow_roll)
 
     p4 = widget.addPlot(title="yaw")
     p4.plot(mdf['time0_s'].to_numpy() , yaw, pen=color, name="yaw [deg]")
+    arrow_yaw = pg.ArrowItem(angle=90)
+    p4.addItem(arrow_yaw)
+
+    return {"arrow_alt":arrow_alt , "arrow_pitch" :arrow_pitch , "arrow_roll":arrow_roll , "arrow_yaw":arrow_yaw}
 
 
 
@@ -167,7 +181,7 @@ class Visualizer3D(object):
 
         #Main Widget containing everything
         self.mainWidget= QWidget(parent= parent)
-        self.mainWidget.setGeometry(0, 0, 1200,1000)
+        self.mainWidget.setGeometry(0, 0, 1400,1000)
         # general layout
         self.layout_general = QVBoxLayout(self.mainWidget)
 
@@ -256,11 +270,12 @@ class Visualizer3D(object):
         pitch = self.data[i][6]
         roll = self.data[i][7]
         yaw = self.data[i][8]
-        x = self.data[i][3]
-        y = self.data[i][4]
-        z = self.data[i][5]
+        lat = self.data[i][3]
+        lon = self.data[i][4]
+        alt = self.data[i][5]
 
 
+        #Update Text data
         self.data_info_text.setText(f'i: \t {i} \n'+
                                     f'time simu: \t {time_simu:.2f} \n'+
                                     f'time0_s: \t {time0_s:.2f} \n' +
@@ -269,18 +284,26 @@ class Visualizer3D(object):
                                     f'pitch: \t {pitch:.1f} \n' +
                                     f'roll: \t {roll:.1f} \n' +
                                     f'yaw: \t {yaw:.1f} \n\n' +
-                                    f'x: \t {x:.1f} \n' +
-                                    f'y: \t {y:.1f} \n' +
-                                    f'z: \t {z:.1f} \n\n'
-        )
+                                    f'x: \t {lat:.1f} \n' +
+                                    f'y: \t {lon:.1f} \n' +
+                                    f'z: \t {alt:.1f} \n\n'
 
+                                    )
+
+        #Update arrow:
+        self.custom['arrow_alt'].setPos(time0_s , alt)
+        self.custom['arrow_pitch'].setPos(time0_s , pitch)
+        self.custom['arrow_roll'].setPos(time0_s , roll)
+        self.custom['arrow_yaw'].setPos(time0_s , yaw)
+
+        #Update 3D body
         self.geom.resetTransform()
         # Important  to rotate before translated
         self.geom.rotate(pitch, 0, 1, 0)
         self.geom.rotate(roll, 1, 0, 0)
         self.geom.rotate(yaw, 0, 0, 1)
 
-        self.geom.translate(x, y, z)
+        self.geom.translate(lat, lon, alt)
 
         self.geom.update()
 
@@ -301,7 +324,7 @@ class Visualizer3D(object):
         if plot_track:
             self.track = extract_path_track(mdata)
         #Plot 
-        add_plot(mdata , self.plots)
+        self.custom= add_plot(mdata , self.plots)
 
         timer = QtCore.QTimer()
         timer.timeout.connect(self.update)
