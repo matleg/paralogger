@@ -113,8 +113,8 @@ app = QApplication(sys.argv)
 
 window = QMainWindow()
 Main_Widget = QWidget()
-window.setWindowTitle("test")
-window.setGeometry(0, 0, 1100, 800)
+window.setWindowTitle("Animation 3D")
+window.setGeometry(0, 0, 1200, 1000)
 
 layout = QVBoxLayout()
 D3_holder = QWidget()

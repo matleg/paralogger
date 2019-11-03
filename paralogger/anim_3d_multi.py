@@ -9,7 +9,8 @@ import numpy as np
 import sys
 import itertools
 from geometry_modeling import Create_geom
-from PyQt5.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout, QLabel ,QSizePolicy
+from PyQt5.QtCore import QSize
 
 # import pkg_resources
 
@@ -128,25 +129,71 @@ def extract_path_track(mdf):
 
     return data_track
 
+def add_plot(mdf , widget):
+    # # Set up each plot 
+    color = (0,255,120)
+
+    # %% Altitude  plot
+    altitude = mdf["alt"].to_numpy() / 1e3  # meters
+
+    p1 = widget.addPlot(title="Alt")
+    p1.plot(mdf['time0_s'].to_numpy() , altitude, pen=color, name="Alt [m]")
+    p1.plot(mdf['time0_s'].to_numpy() , mdf['baro_alt_meter'].to_numpy(), pen=(0,255,0), name="baro_alt_meter")
+
+    # %% Pitch  plot
+    pitch = mdf["pitch"].to_numpy() * -1
+    yaw = mdf["yaw"].to_numpy() * -1
+    roll = mdf["roll"].to_numpy()
+
+    pitch= np.rad2deg(pitch)
+    yaw= np.rad2deg(yaw)
+    roll= np.rad2deg(roll)
+
+    p2 = widget.addPlot(title="Pitch")
+    p2.plot(mdf['time0_s'].to_numpy() , pitch, pen=color, name="pitch [deg]")
+
+    p3 = widget.addPlot(title="roll")
+    p3.plot(mdf['time0_s'].to_numpy() , roll, pen=color, name="roll [deg]")
+
+    p4 = widget.addPlot(title="yaw")
+    p4.plot(mdf['time0_s'].to_numpy() , yaw, pen=color, name="yaw [deg]")
+
+
 
 class Visualizer3D(object):
     def __init__(self,parent):
         self.traces = dict()
         self.app = QtGui.QApplication(sys.argv)
+
+        #Main Widget containing everything
         self.mainWidget= QWidget(parent= parent)
+        self.mainWidget.setGeometry(0, 0, 1200,1000)
+        # general layout
+        self.layout_general = QVBoxLayout(self.mainWidget)
+
         
-        self.mainWidget.setGeometry(0, 0, 950,600)
-        self.layout = QHBoxLayout(self.mainWidget)
+        #Top Layout
+        self.layout_top = QHBoxLayout( )
+        self.layout_general.addLayout(self.layout_top,70)
+
+        #Top Layout
+        self.layout_bottom = QHBoxLayout()
+        self.layout_general.addLayout(self.layout_bottom,30)
         
+        # Live Data text area
         self.data_info_text = QLabel('Live Data info')
-        #self.data_info_text.setGeometry(0, 0, 20, 600)
-        self.layout.addWidget(self.data_info_text)
+        self.layout_top.addWidget(self.data_info_text,15)   # 20% of the width
 
+        #Anim 3D
         self.D3_holder = QWidget(parent=self.mainWidget )
-
         self.w = gl.GLViewWidget(parent= self.D3_holder)
-        self.layout.addWidget( self.w)
-        
+        self.layout_top.addWidget( self.w ,85)   # 80% of the width
+
+        # Plot
+        self.plots =  pg.GraphicsWindow(title="Basic plotting examples")
+        pg.setConfigOptions(antialias=True)
+        self.layout_bottom.addWidget( self.plots ,20)   # 80% of the width
+       
 
         #self.mainWidget.setLayout(self.layout)
         
@@ -201,8 +248,11 @@ class Visualizer3D(object):
             print("loop animation ")
 
         #TODO Use dictionary instead for more clearity
+        time00 = self.data[0][9]
 
-        time0 = self.data[i][9]
+        time0_s = self.data[i][9]
+        time_simu= i* self.step_interval
+        diff_time = time_simu - time0_s + time00
         pitch = self.data[i][6]
         roll = self.data[i][7]
         yaw = self.data[i][8]
@@ -211,14 +261,17 @@ class Visualizer3D(object):
         z = self.data[i][5]
 
 
-        self.data_info_text.setText(f'i: \t {i} \n'
-                                    f'time0_s: \t {time0} \n\n' +
-                                    f'pitch: \t {pitch} \n' +
-                                    f'roll: \t {roll} \n' +
-                                    f'yaw: \t {yaw} \n\n' +
-                                    f'x: \t {x} \n' +
-                                    f'y: \t {y} \n' +
-                                    f'z: \t {z} \n\n'
+        self.data_info_text.setText(f'i: \t {i} \n'+
+                                    f'time simu: \t {time_simu:.2f} \n'+
+                                    f'time0_s: \t {time0_s:.2f} \n' +
+                                    f'time diff: \t {diff_time:.2f} \n\n'+
+
+                                    f'pitch: \t {pitch:.1f} \n' +
+                                    f'roll: \t {roll:.1f} \n' +
+                                    f'yaw: \t {yaw:.1f} \n\n' +
+                                    f'x: \t {x:.1f} \n' +
+                                    f'y: \t {y:.1f} \n' +
+                                    f'z: \t {z:.1f} \n\n'
         )
 
         self.geom.resetTransform()
@@ -247,13 +300,16 @@ class Visualizer3D(object):
 
         if plot_track:
             self.track = extract_path_track(mdata)
+        #Plot 
+        add_plot(mdata , self.plots)
 
         timer = QtCore.QTimer()
         timer.timeout.connect(self.update)
-        step_interval = calculate_average_time(mdata)*1000  # because timer.start is in ms not in s
-        print("step time ms:", step_interval)
+        step_interval = calculate_average_time(mdata) 
+        self.step_interval = step_interval
+        print("step time ms:", step_interval) 
 
-        timer.start(step_interval)
+        timer.start(step_interval*1000)  # because timer.start is in ms not in s
 
         self.start()
 
