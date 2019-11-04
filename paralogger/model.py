@@ -1,21 +1,22 @@
 #! /usr/bin/env python
 
-import pandas as pd
-import os.path
-import time
-import string
-import random
+import datetime
 import hashlib
-import datetime, time
-
 import logging
+import os.path
+import random
+import string
+import time
+
+import pandas as pd
+
+from import_ulog import ulog_list_data, ulog_param, ulog_to_df
+from list_param import Device, Kind, Position
 
 logger = logging.getLogger("model")
 
 # Local imports:
 
-from list_param import Device, Position
-from import_ulog import ulog_to_df, ulog_list_data, ulog_param
 
 ############################# DECORATOR #############################
 
@@ -95,7 +96,7 @@ class Flight:
 
         self.data = []
 
-        self.Sections = []
+        self.sections = []
 
         self.version = 1  # version of the data model
 
@@ -122,18 +123,36 @@ class Flight:
                 df_to_return.append(dataf.df)
         return df_to_return
 
+    def add_general_section(self):
+        if not len(self.data)==0:
+            df=self.data[0].df   #TODO need to select the shorter one instead of the first one
+            time_min = df['time0_s'].min()
+            time_max = df['time0_s'].max()
+
+            mSection= Sections(time_min,time_max,Kind.MISC)
+            self.sections.append(mSection)
+            
+            
+        else:
+            logger.info("Impossible to create section, Data is empty")
+
+
+
 
 class Sections:
     def __repr__(self):
         return str(self.__dict__)
 
-    def __init__(self):
+    def __init__(self, start = None , end=None , kind=None):
 
         self.id = id_generator()
-        self.type = None
-        self.start = None
-        self.end = None
+        self.kind = kind
+        self.start = start
+        self.end = end
         self.version = 1  # version of the Sections model
+
+    def get_start_end(self):
+        return (self.start, self.end)
 
 
 class Data_File:
@@ -185,4 +204,3 @@ class Data_File:
         )
 
         return {"timestamp_start": timestamp_start, "timestamp_end": timestamp_end}
-

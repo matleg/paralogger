@@ -40,25 +40,22 @@ def config_logger():
     return logger
 
 
-
-# PARAMETERS
-logger = config_logger()
-log_name = "log_6_2019-10-27-13-59-46.ulg"
-name_saved_file = "mflight_plot.pkl"
-reload_file = True
-gravity = 9.80665  # m·s-2
-
-
-
 def timer(start, end):
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     return "{:0>2} h {:0>2} min {:05.2f} s".format(int(hours), int(minutes), seconds)
 
-
+# PARAMETERS
+logger = config_logger()
+log_name = "log_3_2019-11-3-16-21-34.ulg"
+name_saved_file = "mflight_plot.pkl"
+reload_file = True
 
 
 def load_file(ulog_file_path, reload=True):
+    """ Main function to load a Ulg file and create a Flight Object
+    return : Flight object ( and saved or not  in a pkl file) 
+    """
     if reload_file:
         # print("Reading Ulog file : " + str(ulog_file_name))
 
@@ -66,6 +63,7 @@ def load_file(ulog_file_path, reload=True):
 
         mflight.add_data_file(ulog_file_path, Device.PIXRACER, Position.PILOT)
         mflight.add_info("Tulipe Glider", "Razor4", None, "Paul", 94.2, "Nice Place")
+        mflight.add_general_section()
 
         logger.info("Writing : " + name_saved_file)
         with open(name_saved_file, "wb") as f:
@@ -76,14 +74,15 @@ def load_file(ulog_file_path, reload=True):
         with open(name_saved_file, "rb") as f:
             mflight = pickle.load(f)
 
-    # Print the input Dataframe.
-    print(mflight)
+
+    # Print Data for debug.
+    logger.debug(mflight)
     df_data = mflight.data[0].list_available_data()
-    print(df_data)
+    logger.debug(df_data)
     # df_data.loc[df_data['parent']=='vehicle_local_position']
 
     mdf = mflight.get_df_by_position(Position.PILOT)[0]
-    print(mdf)
+    logger.debug(mdf)
 
 
 
@@ -99,8 +98,6 @@ def main():
     
     logger.info(" --- END ----")
     print("END")
-
-
 
 
 
