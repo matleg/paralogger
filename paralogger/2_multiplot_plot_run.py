@@ -19,9 +19,8 @@ from anim_3d_multi import Visualizer3D
 from list_param import Device, Position
 from model import Flight, timeit
 
-os.environ["DISPLAY"] = ":0"
+os.environ["DISPLAY"] = ":0" #Use for linux  on vscode at least
 
-gravity = 9.80665  # m·s-2
 name_saved_file = "mflight_plot.pkl"
 
 
@@ -30,17 +29,20 @@ name_saved_file = "mflight_plot.pkl"
 with open(name_saved_file, "rb") as f:
     mflight = pickle.load(f)
 
+#get the time bound of the general section
+t_start,t_end = mflight.sections[0].get_start_end()
+
+#Extrcat th dataframe at thepilot position
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
 df_plot = mdf.loc[mdf["lat"].notnull()]
 
-t_start = 0
-t_end = 150
 
+#Extract a sub selection of the dataframe based on bound time
 mask = (df_plot["time0_s"] > t_start) & (df_plot["time0_s"] <= t_end)
 df_plot_sel = df_plot.loc[mask]
 
 
-
+#%% 3D plot
 app = QApplication(sys.argv)
 
 

@@ -2,19 +2,22 @@
     Animated 3D sinc function
 """
 
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph.opengl as gl
-import pyqtgraph as pg
-import numpy as np
-import sys
 import itertools
-from geometry_modeling import Create_geom
-from PyQt5.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout, QLabel ,QSizePolicy
+import os
+import sys
+
+import numpy as np
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
 from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout,
+                             QWidget)
+from pyqtgraph.Qt import QtCore, QtGui
+
+from geometry_modeling import Create_geom
 
 # import pkg_resources
 
-import os
 
 os.environ["DISPLAY"] = ":0"
 
@@ -92,7 +95,7 @@ def convert_df_2_data(mdf):
     # Work on Gps coordinate
     lon = mdf["lon"].to_numpy() / 1e7  # degrees
     lat = mdf["lat"].to_numpy() / 1e7
-    altitude = mdf["alt"].to_numpy() / 1e3  # meters
+    altitude = mdf["alt"].to_numpy()   # meters
 
     lat = np.deg2rad(lat)
     lon = np.deg2rad(lon)
@@ -134,8 +137,8 @@ def add_plot(mdf , widget):
     color = (0,255,120)
 
     # %% Altitude  plot
-    start_altitude =mdf["alt"].iloc[0] /1e3
-    altitude = (mdf["alt"].to_numpy() / 1e3 )   -  start_altitude # meters
+    start_altitude =mdf["alt"].iloc[0] 
+    altitude = (mdf["alt"].to_numpy() )   -  start_altitude # meters
 
     p1 = widget.addPlot(title="Alt")
 
@@ -223,7 +226,6 @@ class Visualizer3D(object):
         self.index = 0
 
         # Created the geometrie
-
         models_path = os.path.dirname(os.path.abspath(__file__))
         obj = "simple_body.obj"
         obj_path = os.path.join(models_path, "3D_model", obj)
@@ -346,4 +348,3 @@ if __name__ == "__main__":
 
     v = Visualizer3D()
     v.animation(dict_from_file, True)
-
