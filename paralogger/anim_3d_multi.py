@@ -6,6 +6,10 @@ import itertools
 import os
 import sys
 
+
+import logging
+logger = logging.getLogger("anime_3d_multi")
+
 import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -81,16 +85,8 @@ def map_projection(lat, lon, anchor_lat, anchor_lon):
 
     return x, y
 
-
-def convert_df_2_data(mdf):
-
+def prepare_data (mdf) :
     mdf[["pitch", "yaw", "roll"]] = mdf[["pitch", "yaw", "roll"]].apply(np.rad2deg)
-
-    # Reorient data
-    mdf["y"] = mdf["y"] * -1
-    mdf["z"] = mdf["z"] * -1
-    mdf["pitch"] = mdf["pitch"] * -1
-    mdf["yaw"] = mdf["yaw"] * -1
 
     # Work on Gps coordinate
     lon = mdf["lon"].to_numpy() / 1e7  # degrees
@@ -107,30 +103,20 @@ def convert_df_2_data(mdf):
     lon = lon - lon[0]
     altitude0 = altitude - altitude[0]
 
-    mdf["lat_m"] = lat
-    mdf["lon_m"] = lon
-    mdf["alt_m"] = altitude0
-    data_table = mdf[
-        ["x", "y", "z", "lat_m", "lon_m", "alt_m", "pitch", "roll", "yaw","time0_s"]
-    ].to_numpy()
-    return data_table
+    mdf["lat_m"] = lat 
+    mdf["lon_m"] = lon 
+    mdf["alt_m"] = altitude0 
 
+    # Reorient data (#TODO  to explore more)
+    mdf["lat_m"] = mdf["lat_m"]  * 1  #x
+    mdf["lon_m"] = mdf["lon_m"]  * -1 #y
+    mdf["alt_m"] = mdf["alt_m"]  * 1  #z
+    mdf["pitch"] = mdf["pitch"]  * 1
+    mdf["roll"]  = mdf["roll"]   * 1
+    mdf["yaw"]   = mdf["yaw"]    * -1
 
-def calculate_average_time(mdf):
-    duration = mdf.iloc[-1]["time0_s"] - mdf.iloc[0]["time0_s"]
-    nb_record = len(mdf)
-    average_step_time = duration / nb_record
-    print('duration: ' + str(duration) + " for nb record: " + str(nb_record))
-    print("average_step_time", average_step_time)
+    return mdf
 
-    return average_step_time
-
-
-def extract_path_track(mdf):
-    print("add_path_track ")
-    data_track = mdf[["lat_m", "lon_m", "alt_m"]].to_numpy()
-
-    return data_track
 
 def add_plot(mdf , widget):
     # # Set up each plot 
@@ -220,10 +206,12 @@ class Visualizer3D(object):
         self.w.setWindowTitle("3D view track")
         #self.w.setGeometry(0, 110, 720, 480)
 
-        self.data = None
+        
+        self.df = None
         self.track = None
         self.track_is_ploted = False
         self.index = 0
+        self.step_interval =None
 
         # Created the geometrie
         models_path = os.path.dirname(os.path.abspath(__file__))
@@ -251,30 +239,47 @@ class Visualizer3D(object):
 
         self.w.addItem(self.geom)
 
+    def extract_path_track(self):
+        logger.info("add_path_track ")
+        self.track = self.df[["lat_m", "lon_m", "alt_m"]].to_numpy()
+
+    def calculate_average_time(self):
+        duration = self.df.iloc[-1]["time0_s"] - self.df.iloc[0]["time0_s"]
+        nb_record = len(self.df)
+        average_step_time = duration / nb_record
+
+        logger.info('duration: ' + str(duration) + " for nb record: " + str(nb_record))
+        logger.info("average_step_time", average_step_time)
+
+        self.step_interval = average_step_time
+
+
     def start(self):
         if (sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION"):
             sys.exit(QtGui.QApplication.instance().exec_())
 
     def update(self):
 
-        self.index = (self.index + 1) % len(self.data)
+        self.index = (self.index + 1) % len(self.df)
 
         i = self.index
         if i == 0:
-            print("loop animation ")
+            print("... loop animation ...")
 
-        #TODO Use dictionary instead for more clearity
-        time00 = self.data[0][9]
 
-        time0_s = self.data[i][9]
+        time00 = self.df["time0_s"].iloc[0]
+
+        time0_s = self.df["time0_s"].iloc[i]
+
         time_simu= i* self.step_interval
         diff_time = time_simu - time0_s + time00
-        pitch = self.data[i][6]
-        roll = self.data[i][7]
-        yaw = self.data[i][8]
-        lat = self.data[i][3]
-        lon = self.data[i][4]
-        alt = self.data[i][5]
+
+        pitch = self.df["pitch"].iloc[i]
+        roll = self.df["roll"].iloc[i]
+        yaw = self.df["yaw"].iloc[i]
+        lat = self.df["lat_m"].iloc[i]
+        lon = self.df["lon_m"].iloc[i]
+        alt = self.df["alt_m"].iloc[i]
 
 
         #Update Text data
@@ -321,20 +326,22 @@ class Visualizer3D(object):
 
         print("total records:" + str(len(mdata)))
 
-        self.data = convert_df_2_data(mdata)
+        self.df = prepare_data(mdata)
 
         if plot_track:
-            self.track = extract_path_track(mdata)
+            self.extract_path_track()
+
         #Plot 
         self.custom= add_plot(mdata , self.plots)
 
         timer = QtCore.QTimer()
         timer.timeout.connect(self.update)
-        step_interval = calculate_average_time(mdata) 
-        self.step_interval = step_interval
-        print("step time ms:", step_interval) 
 
-        timer.start(step_interval*1000)  # because timer.start is in ms not in s
+        self.calculate_average_time() 
+
+        print("step time ms:", self.step_interval) 
+
+        timer.start(self.step_interval*1000)  # because timer.start is in ms not in s
 
         self.start()
 

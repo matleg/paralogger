@@ -32,6 +32,8 @@ with open(name_saved_file, "rb") as f:
 #get the time bound of the general section
 t_start,t_end = mflight.sections[0].get_start_end()
 
+
+t_start=15
 #Extrcat th dataframe at thepilot position
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
 df_plot = mdf.loc[mdf["lat"].notnull()]
