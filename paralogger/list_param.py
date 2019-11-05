@@ -10,6 +10,12 @@ class Position():
     PILOT = "mPilot"
     GLIDER = "mGlider"
 
+class Kind():
+    FRONTAL = "mFrontal"
+    ASYM = "mAsym"
+    SPIRAL = "mSpiral"
+    MISC = "mMisc"
+
 
 
 
