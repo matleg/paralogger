@@ -8,6 +8,7 @@ import random
 import string
 import time
 
+import numpy as np
 import pandas as pd
 
 from import_ulog import ulog_list_data, ulog_param, ulog_to_df
@@ -150,10 +151,28 @@ class Sections:
         self.start = start
         self.end = end
         self.version = 1  # version of the Sections model
+        self.calibrate={"pitch" : 0 , "roll" :0 , "yaw" : 0 }
 
     def get_start_end(self):
         return (self.start, self.end)
 
+    def get_calibration(self,df, t_start=0 ,t_end =5):
+        mask = (df["time0_s"] > t_start) & (df["time0_s"] <= t_end)
+
+
+        avg_pitch = df.loc[mask, 'pitch'].mean()
+        avg_roll = df.loc[mask, 'roll'].mean()
+        avg_yaw = df.loc[mask, 'yaw'].mean()
+
+  
+        logger.info( " calibrating  from time0_s: " + str(t_start) + "s to : " + str(t_end) + " s" )
+        logger.debug( ' avg_pitch :' + str(avg_pitch) + " rad so: " + str(np.rad2deg(avg_pitch)) + " deg")
+        logger.debug( ' avg_roll :' + str(avg_roll) + " rad so: " + str(np.rad2deg(avg_roll)) + " deg")
+        #logger.debug( ' avg_yaw :' + str(avg_yaw) + " rad so: " + str(np.rad2deg(avg_yaw)) + " deg" + " wanted (deg): "+ str(start_yaw_angle_deg))
+
+        return {"pitch" : avg_pitch , "roll" :avg_roll , "yaw" : avg_yaw }
+
+        
 
 class Data_File:
     def __repr__(self):

@@ -47,8 +47,8 @@ def timer(start, end):
 
 # PARAMETERS
 logger = config_logger()
-log_name = "log_3_2019-11-3-16-21-34.ulg"
-name_saved_file = "mflight_plot.pkl"
+log_name = "log_6_2019-11-6-13-32-36_flight_1.ulg"
+name_saved_file = "mflight_plot_V1.pkl"
 reload_file = True
 
 

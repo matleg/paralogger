@@ -21,7 +21,7 @@ from model import Flight, timeit
 
 os.environ["DISPLAY"] = ":0" #Use for linux  on vscode at least
 
-name_saved_file = "mflight_plot.pkl"
+name_saved_file = "mflight_plot_V1.pkl"
 
 
 #%% Prepare data
@@ -31,12 +31,21 @@ with open(name_saved_file, "rb") as f:
 
 #get the time bound of the general section
 t_start,t_end = mflight.sections[0].get_start_end()
-
-
-t_start=15
-#Extrcat th dataframe at thepilot position
+t_start=110
+t_end = 173
+#Extract th dataframe at thepilot position
 mdf = mflight.get_df_by_position(Position.PILOT)[0]
+
 df_plot = mdf.loc[mdf["lat"].notnull()]
+
+#Clibrate it
+if 1 : 
+    dict_calibration = mflight.sections[0].get_calibration(mdf,t_start , t_start+5)
+    print(dict_calibration)
+    df_plot['pitch'] = df_plot['pitch'] - dict_calibration['pitch']
+    df_plot['roll'] = df_plot['roll'] - dict_calibration['roll']
+#df_plot['yaw'] = df_plot['yaw'] - avg_yaw + start_yaw_angle
+
 
 
 #Extract a sub selection of the dataframe based on bound time
