@@ -190,8 +190,10 @@ def ulog_to_df(file_path):
     df_G['roll'].interpolate(method='linear',inplace=True)
     df_G['yaw'].interpolate(method='linear',inplace=True)
     df_G['q[0]'].interpolate(method='linear',inplace=True)
-    df_G['q[0]'].interpolate(method='linear',inplace=True)
-    df_G['q[0]'].interpolate(method='linear',inplace=True)
+    df_G['q[1]'].interpolate(method='linear',inplace=True)
+    df_G['q[2]'].interpolate(method='linear',inplace=True)
+    df_G['q[3]'].interpolate(method='linear',inplace=True)
+
 
     ## Create additional data
     #Created a time 0 column
