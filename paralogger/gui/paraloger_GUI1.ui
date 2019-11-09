@@ -34,7 +34,13 @@
         </widget>
        </item>
        <item>
-        <widget class="QTreeView" name="treeView"/>
+        <widget class="QTreeWidget" name="treeWidget">
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_object_details">
@@ -64,12 +70,12 @@
      <x>0</x>
      <y>0</y>
      <width>1502</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Fi&amp;le</string>
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionSave_as"/>
@@ -78,7 +84,7 @@
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
-     <string>About</string>
+     <string>Abo&amp;ut</string>
     </property>
     <addaction name="actionHelp"/>
     <addaction name="actionVersion"/>
@@ -89,27 +95,27 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
   </action>
   <action name="actionimport">
    <property name="text">
-    <string>import</string>
+    <string>&amp;import</string>
    </property>
   </action>
   <action name="actionHelp">
    <property name="text">
-    <string>Help</string>
+    <string>&amp;Help</string>
    </property>
   </action>
   <action name="actionVersion">
    <property name="text">
-    <string>Version</string>
+    <string>&amp;Version</string>
    </property>
   </action>
   <action name="actionSave_as">
    <property name="text">
-    <string>Save_as</string>
+    <string>&amp;Save_as</string>
    </property>
   </action>
  </widget>

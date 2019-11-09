@@ -8,7 +8,9 @@ import os
 import time
 import pickle
 
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+
+
 
 from gui.main_gui import  Ui_MainWindow
 
@@ -45,13 +47,9 @@ def config_logger():
 
 logger = config_logger()    
 
-    
-
-
 
 class Prog(QtGui.QMainWindow):
     
-
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()
@@ -62,7 +60,10 @@ class Prog(QtGui.QMainWindow):
 
         #add Action
         self.ui.actionOpen.triggered.connect(self.open_pickle_file)
+        self.ui.treeWidget.itemClicked.connect(self.onItemClicked)
 
+        #setup Qtree
+        self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
         
 
     def open_pickle_file(self):
@@ -78,15 +79,38 @@ class Prog(QtGui.QMainWindow):
                 with open(filename, 'rb') as pickle_file:
                     self.flight = pickle.load(pickle_file)
 
-                self.load_project_tree()
-
-           
+                self.update_project_tree()
+   
             except Exception as ex:
                 print(ex)
         
 
-    def load_project_tree(self):
-        print("load_project_tree")
+    def update_project_tree(self):
+        logger.info("load_project_tree")
+        tw = self.ui.treeWidget
+        l1 = QtWidgets.QTreeWidgetItem([self.flight.glider, "--" ,self.flight.id])
+
+
+        for sect in self.flight.sections:
+            l1_child = QtWidgets.QTreeWidgetItem([str(sect.start) + " - " +str(sect.end), sect.kind ,sect.id])
+            l1.addChild(l1_child)
+
+        tw.addTopLevelItem(l1)
+        tw.expandAll()
+
+    
+    @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
+    def onItemClicked(self, it, col):
+        #logger.debug("clicked QTreeWidgetItem ")
+        id = it.text(2)
+        logger.debug("clicked: "+ str(it) +", "+ str(col) + ", "+  str(id))
+
+    
+    def display_properties(self,index):
+        logger.debug("display_properties: " +index)
+
+        
+        
 
 
 def main():
