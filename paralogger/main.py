@@ -62,6 +62,10 @@ class Prog(QtGui.QMainWindow):
         self.ui.actionOpen.triggered.connect(self.open_pickle_file)
         self.ui.treeWidget.itemClicked.connect(self.onItemClicked)
 
+        self.ui.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ui.treeWidget.customContextMenuRequested.connect(self.openMenu)
+
+
         #setup Qtree
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
         
@@ -84,7 +88,7 @@ class Prog(QtGui.QMainWindow):
             except Exception as ex:
                 print(ex)
         
-
+    ### TREE VIEW
     def update_project_tree(self):
         logger.info("load_project_tree")
         tw = self.ui.treeWidget
@@ -105,11 +109,42 @@ class Prog(QtGui.QMainWindow):
         id = it.text(2)
         logger.debug("clicked: "+ str(it) +", "+ str(col) + ", "+  str(id))
 
+    def openMenu(self, position):
+    
+        indexes = self.ui.treeWidget.selectedIndexes()
+        if len(indexes) > 0:
+            level = 0
+            index = indexes[0]
+            while index.parent().isValid():
+                index = index.parent()
+                level += 1
+        
+        menu = QtWidgets.QMenu()
+        if level == 0:
+            action_add = menu.addAction(self.tr("Add Section"))
+            action_add.triggered.connect(self.add_section)
+            
+        elif level == 1:
+            action_del = menu.addAction('Delete')
+            action_del.triggered.connect(self.delete_section)
+
+            menu.addAction(self.tr("Export"))
+        elif level == 2:
+            menu.addAction(self.tr("Edit object"))
+        
+        menu.exec_(self.ui.treeWidget.viewport().mapToGlobal(position))
+
+    def delete_section(self):
+        print("delete")
+
+    def add_section(self):
+        print("add")
+
+    ## DETAILS OBJECT
     
     def display_properties(self,index):
         logger.debug("display_properties: " +index)
 
-        
         
 
 
