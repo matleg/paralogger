@@ -50,7 +50,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableWidget" name="tableWidget"/>
+        <widget class="QTableView" name="tableView"/>
        </item>
        <item>
         <widget class="QLabel" name="label_info_bar">
