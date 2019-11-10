@@ -92,6 +92,7 @@ class Prog(QtGui.QMainWindow):
     def update_project_tree(self):
         logger.info("load_project_tree")
         tw = self.ui.treeWidget
+        tw.clear() 
         l1 = QtWidgets.QTreeWidgetItem([self.flight.glider, "--" ,self.flight.id])
 
 
@@ -109,36 +110,52 @@ class Prog(QtGui.QMainWindow):
         id = it.text(2)
         logger.debug("clicked: "+ str(it) +", "+ str(col) + ", "+  str(id))
 
+
     def openMenu(self, position):
-    
         indexes = self.ui.treeWidget.selectedIndexes()
+        item = self.ui.treeWidget.itemAt(position)
+        #
+
+        menu = QtWidgets.QMenu()
+
         if len(indexes) > 0:
+            uid = item.text(2)  # The text of the node.
+
             level = 0
             index = indexes[0]
             while index.parent().isValid():
                 index = index.parent()
                 level += 1
+        else:
+            level = -1
+            menu.addAction(self.tr("Refresh"))
         
-        menu = QtWidgets.QMenu()
+
         if level == 0:
             action_add = menu.addAction(self.tr("Add Section"))
             action_add.triggered.connect(self.add_section)
             
         elif level == 1:
             action_del = menu.addAction('Delete')
-            action_del.triggered.connect(self.delete_section)
+            action_del.triggered.connect(lambda: self.delete_section(uid))
 
             menu.addAction(self.tr("Export"))
-        elif level == 2:
-            menu.addAction(self.tr("Edit object"))
+        elif level == -1:
+            action_refresh = menu.addAction(self.tr("Refresh"))
+            action_refresh.triggered.connect(self.update_project_tree)
         
         menu.exec_(self.ui.treeWidget.viewport().mapToGlobal(position))
 
-    def delete_section(self):
-        print("delete")
+    def delete_section(self,uid):
+        logger.info("delete section :" +str(uid))
+        self.flight.delete_section(uid)
+        self.update_project_tree()
 
     def add_section(self):
-        print("add")
+        logger.info("add section")
+        self.flight.add_general_section()
+        self.update_project_tree()
+        
 
     ## DETAILS OBJECT
     

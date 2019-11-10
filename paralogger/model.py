@@ -124,11 +124,16 @@ class Flight:
                 df_to_return.append(dataf.df)
         return df_to_return
 
-    def add_general_section(self):
+    def add_general_section(self , time_min=None ,time_max=None ):
+
         if not len(self.data)==0:
+            
             df=self.data[0].df   #TODO need to select the shorter one instead of the first one
-            time_min = df['time0_s'].min()
-            time_max = df['time0_s'].max()
+            
+            if time_min == None:
+                time_min = df['time0_s'].min()
+            if time_max == None:
+                time_max = df['time0_s'].min()
 
             mSection= Sections(time_min,time_max,Kind.MISC)
             self.sections.append(mSection)
@@ -137,6 +142,8 @@ class Flight:
         else:
             logger.info("Impossible to create section, Data is empty")
 
+    def delete_section(self, uid):
+        self.sections = [i for i in self.sections if i.id!=uid]
 
 
 
