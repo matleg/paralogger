@@ -145,6 +145,11 @@ class Flight:
     def delete_section(self, uid):
         self.sections = [i for i in self.sections if i.id!=uid]
 
+    def section_by_id(self, uid):
+        section_to_return = [i for i in self.sections if i.id == uid]
+        return section_to_return  
+
+
 
 
 class Sections:

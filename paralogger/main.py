@@ -60,10 +60,14 @@ class Prog(QtGui.QMainWindow):
 
         #add Action
         self.ui.actionOpen.triggered.connect(self.open_pickle_file)
-        self.ui.treeWidget.itemClicked.connect(self.onItemClicked)
 
+        self.ui.treeWidget.itemClicked.connect(self.onTreeItemClicked)
         self.ui.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.treeWidget.customContextMenuRequested.connect(self.openMenu)
+
+        self.ui.tableWidget.itemChanged.connect(self.onTableItemChanged)
+        #self.ui.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.CurrentChanged)
+
 
 
         #setup Qtree
@@ -103,23 +107,9 @@ class Prog(QtGui.QMainWindow):
         tw.addTopLevelItem(l1)
         tw.expandAll()
 
-    
-    @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
-    def onItemClicked(self, it, col):
-        #logger.debug("clicked QTreeWidgetItem ")
-        id = it.text(2)
-        logger.debug("clicked: "+ str(it) +", "+ str(col) + ", "+  str(id))
-
-
-    def openMenu(self, position):
-        indexes = self.ui.treeWidget.selectedIndexes()
-        item = self.ui.treeWidget.itemAt(position)
-        #
-
-        menu = QtWidgets.QMenu()
+    def get_level_from_index(self,indexes):
 
         if len(indexes) > 0:
-            uid = item.text(2)  # The text of the node.
 
             level = 0
             index = indexes[0]
@@ -128,8 +118,41 @@ class Prog(QtGui.QMainWindow):
                 level += 1
         else:
             level = -1
-            menu.addAction(self.tr("Refresh"))
+
+        return level
+
+    
+    @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
+    def onTreeItemClicked(self, it, col):
+        #logger.debug("clicked QTreeWidgetItem ")
+
+        indexes = self.ui.treeWidget.selectedIndexes()
+
+        level = self.get_level_from_index(indexes)
+
+        if level >= 0:
+            uid = it.text(2)  # The text of the node.
+            logger.debug("clicked: "+ str(it) +", "+ str(col) + ", "+  str(uid) + " level: "+ str(level))
+        else: 
+            uid=None
+
+        if level == 0:   # flight  level
+            self.display_properties_flight(uid,level)
+            
+        elif level == 1:   # section level
+            self.display_properties_flight(uid,level)
+            
+
+    def openMenu(self, position):
+        indexes = self.ui.treeWidget.selectedIndexes()
+        item = self.ui.treeWidget.itemAt(position)
+        #
+
+        menu = QtWidgets.QMenu()
         
+        level = self.get_level_from_index(indexes)
+        if level >0:
+            uid = item.text(2)  # The text of the node.
 
         if level == 0:
             action_add = menu.addAction(self.tr("Add Section"))
@@ -159,8 +182,48 @@ class Prog(QtGui.QMainWindow):
 
     ## DETAILS OBJECT
     
-    def display_properties(self,index):
-        logger.debug("display_properties: " +index)
+    def display_properties_flight(self,index , level):
+        logger.debug("display_properties: " + str(index))
+        
+        if level == 0:
+            dict_to_display =  vars(self.flight)
+        elif level ==1 :
+            dict_to_display = vars(self.flight.section_by_id(index)[0])
+
+        table_view = self.ui.tableWidget
+        table_view.clear()
+        # set row count
+        table_view.setColumnCount(2)
+        table_view.setRowCount(len(dict_to_display))
+
+        # set column count
+        table_view.setColumnCount(2)
+
+        i=0
+        for name, value in dict_to_display.items(): 
+            try:
+                table_view.setItem(i,0, QtWidgets.QTableWidgetItem(name))
+
+                item_value = QtWidgets.QTableWidgetItem(str(value))
+                #item_value.setFlags(QtCore.Qt.ItemIsEditable)
+
+                table_view.setItem(i,1,item_value )
+
+                i+=1
+            except :
+                pass
+            
+    @QtCore.pyqtSlot(QtWidgets.QTableWidgetItem)
+    def onTableItemChanged(self,item):
+        self.changed_items.add(self.item)
+        print(self.item)
+        # indexes = self.ui.tableWidget.selectedIndexes()
+        # print("h")
+        # print("clicked QTreeWidgetItem " ,item)
+
+    def display_properties_section(self,index):
+        print("")
+
 
         
 
@@ -179,3 +242,5 @@ if __name__ == '__main__':
 
 # MISC
 # pyuic5 paraloger_GUI1.ui > main_gui.py
+# panda to table view:  https://stackoverflow.com/questions/44603119/how-to-display-a-pandas-data-frame-with-pyqt5-pyside2
+# 
