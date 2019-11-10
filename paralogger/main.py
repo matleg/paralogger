@@ -65,13 +65,21 @@ class Prog(QtGui.QMainWindow):
         self.ui.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.treeWidget.customContextMenuRequested.connect(self.openMenu)
 
-        self.ui.tableWidget.itemChanged.connect(self.onTableItemChanged)
+        #self.ui.tableView.itemChanged.connect(self.onTableItemChanged)
         #self.ui.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.CurrentChanged)
 
 
 
         #setup Qtree
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
+
+        #setup table view detail section
+        self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
+        self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
+        #self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        #self.populate()
+        self.ui.tableView.doubleClicked.connect(self.on_click)
+
         
 
     def open_pickle_file(self):
@@ -137,10 +145,10 @@ class Prog(QtGui.QMainWindow):
             uid=None
 
         if level == 0:   # flight  level
-            self.display_properties_flight(uid,level)
+            self.populate(uid,level)
             
         elif level == 1:   # section level
-            self.display_properties_flight(uid,level)
+            self.populate(uid,level)
             
 
     def openMenu(self, position):
@@ -181,50 +189,41 @@ class Prog(QtGui.QMainWindow):
         
 
     ## DETAILS OBJECT
+
+    def on_click(self, signal):
+        row = signal.row()  # RETRIEVES ROW OF CELL THAT WAS DOUBLE CLICKED
+        column = signal.column()  # RETRIEVES COLUMN OF CELL THAT WAS DOUBLE CLICKED
+        cell_dict = self.ui.model.itemData(signal)  # RETURNS DICT VALUE OF SIGNAL
+        cell_value = cell_dict.get(0)  # RETRIEVE VALUE FROM DICT
+ 
+        index = signal.sibling(row, 0)
+        index_dict = self.ui.model.itemData(index)
+        index_value = index_dict.get(0)
+        print(
+            'Row {}, Column {} clicked - value: {}\nColumn 1 contents: {}'.format(row, column, cell_value, index_value))
     
-    def display_properties_flight(self,index , level):
-        logger.debug("display_properties: " + str(index))
-        
+    def populate(self,uid,level):
+        # MODEL ONLY ACCEPTS STRINGS - MUST CONVERT.
+
+        logger.debug("display_properties: " + str(uid))
+        self.ui.model.clear()
+                
         if level == 0:
             dict_to_display =  vars(self.flight)
         elif level ==1 :
-            dict_to_display = vars(self.flight.section_by_id(index)[0])
+            dict_to_display = vars(self.flight.section_by_id(uid)[0])
 
-        table_view = self.ui.tableWidget
-        table_view.clear()
-        # set row count
-        table_view.setColumnCount(2)
-        table_view.setRowCount(len(dict_to_display))
 
-        # set column count
-        table_view.setColumnCount(2)
-
-        i=0
         for name, value in dict_to_display.items(): 
-            try:
-                table_view.setItem(i,0, QtWidgets.QTableWidgetItem(name))
+            row = []
+            cell_name = QtGui.QStandardItem(str(name))
+            row.append(cell_name)
+            cell_value = QtGui.QStandardItem(str(value))
+            row.append(cell_value)
 
-                item_value = QtWidgets.QTableWidgetItem(str(value))
-                #item_value.setFlags(QtCore.Qt.ItemIsEditable)
+            self.ui.model.appendRow(row)
 
-                table_view.setItem(i,1,item_value )
-
-                i+=1
-            except :
-                pass
-            
-    @QtCore.pyqtSlot(QtWidgets.QTableWidgetItem)
-    def onTableItemChanged(self,item):
-        self.changed_items.add(self.item)
-        print(self.item)
-        # indexes = self.ui.tableWidget.selectedIndexes()
-        # print("h")
-        # print("clicked QTreeWidgetItem " ,item)
-
-    def display_properties_section(self,index):
-        print("")
-
-
+        self.show()
         
 
 
