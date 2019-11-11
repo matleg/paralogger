@@ -26,6 +26,8 @@ __version__ = '0.1'
 if __name__ == "__main__":
     import sys
 
+log_file_name = "main_paralogger.log"
+
 
 def config_logger():
     logger = logging.getLogger()
@@ -34,7 +36,7 @@ def config_logger():
     formatter = logging.Formatter(
         "%(asctime)s :: %(levelname)s :: %(module)s :: %(funcName)s ::  %(message)s"
     )
-    file_handler = logging.handlers.RotatingFileHandler("main_paralogger.log", "a", 1000000, 1)
+    file_handler = logging.handlers.RotatingFileHandler(log_file_name, "a", 1000000, 1)
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -117,15 +119,26 @@ class Prog(QtGui.QMainWindow):
                 logger.error(ex)
         
     def about_popup(self):
+        """ About section 
+        Display various info  for debug and  log file details
+        """
 
         # from https://stackoverflow.com/questions/54447535/how-to-fix-typeerror-in-qtwidgets-qmessagebox-for-popup-messag
+        cwd = os.path.dirname(os.path.abspath(__file__))
+        log_file_path= ulog_file_path = os.path.join(cwd, log_file_name)
+
+        with open(log_file_path, 'r') as file:
+            log_content = file.read()
+
 
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Information)
-        msg.setText("Version : " + str(__version__ ))
-        msg.setInformativeText("More info on :\n https://github.com/fredvol/paralogger ")
+        msg.setText("Version : " + str(__version__ ) + "\n"
+                    "Log file name: " + str(log_file_name) +"\n"
+                    "curent working directory: " + str(cwd) )
+        msg.setInformativeText("More info on :\nhttps://github.com/fredvol/paralogger ")
         msg.setWindowTitle("About")
-        #msg.setDetailedText("The details are as follows:")
+        msg.setDetailedText(log_content)
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok ) #| QtWidgets.QMessageBox.Cancel)
 
         retval = msg.exec_() 
