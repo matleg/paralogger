@@ -47,6 +47,7 @@ def config_logger():
 
 logger = config_logger()    
 
+#TODO redirect the expection  in the logger 
 
 class Prog(QtGui.QMainWindow):
     
@@ -60,6 +61,10 @@ class Prog(QtGui.QMainWindow):
 
         #add Action
         self.ui.actionOpen.triggered.connect(self.open_pickle_file)
+        self.ui.actionSave_as.triggered.connect(self.save_pickle_file)
+        self.ui.actionVersion.triggered.connect(self.about_popup)
+        self.ui.actionHelp.triggered.connect(self.openUrl_help)
+        
 
         self.ui.treeWidget.itemClicked.connect(self.onTreeItemClicked)
         self.ui.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -74,15 +79,13 @@ class Prog(QtGui.QMainWindow):
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
 
         #setup table view detail section
-        
+
         self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
         self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
         #self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.ui.model.dataChanged.connect(self.on_datachange_model)
 
-        
-
-        
+     
 
     def open_pickle_file(self):
         logger.debug(" Menu :  open")
@@ -99,11 +102,39 @@ class Prog(QtGui.QMainWindow):
 
                 self.update_project_tree()
 
-
-
             except Exception as ex:
-                print(ex)
+                logger.error(ex)
+
+    def save_pickle_file(self):
+        try:
+            tuple_saved_file = QtGui.QFileDialog.getSaveFileName(self, 'Save File','','Pickle(*.pkl)')
+            name_saved_file = tuple_saved_file[0]+'.pkl'
+            logger.info("Saving as : " + name_saved_file[0]+'.pkl')
+            with open(name_saved_file, "wb") as f:
+                pickle.dump(self.flight, f) 
         
+        except Exception as ex:
+                logger.error(ex)
+        
+    def about_popup(self):
+
+        # from https://stackoverflow.com/questions/54447535/how-to-fix-typeerror-in-qtwidgets-qmessagebox-for-popup-messag
+
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText("Version : " + str(__version__ ))
+        msg.setInformativeText("More info on :\n https://github.com/fredvol/paralogger ")
+        msg.setWindowTitle("About")
+        #msg.setDetailedText("The details are as follows:")
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok ) #| QtWidgets.QMessageBox.Cancel)
+
+        retval = msg.exec_() 
+
+    def openUrl_help(self):
+        url = QtCore.QUrl('https://github.com/fredvol/paralogger')
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open url')
+
     ### TREE VIEW
     def update_project_tree(self):
         logger.info("load_project_tree")
