@@ -74,11 +74,13 @@ class Prog(QtGui.QMainWindow):
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
 
         #setup table view detail section
+        
         self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
         self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
         #self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        #self.populate()
-        self.ui.tableView.doubleClicked.connect(self.on_click)
+        self.ui.model.dataChanged.connect(self.on_datachange_model)
+
+        
 
         
 
@@ -96,7 +98,9 @@ class Prog(QtGui.QMainWindow):
                     self.flight = pickle.load(pickle_file)
 
                 self.update_project_tree()
-   
+
+
+
             except Exception as ex:
                 print(ex)
         
@@ -132,7 +136,6 @@ class Prog(QtGui.QMainWindow):
     
     @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
     def onTreeItemClicked(self, it, col):
-        #logger.debug("clicked QTreeWidgetItem ")
 
         indexes = self.ui.treeWidget.selectedIndexes()
 
@@ -159,19 +162,19 @@ class Prog(QtGui.QMainWindow):
         menu = QtWidgets.QMenu()
         
         level = self.get_level_from_index(indexes)
-        if level >0:
-            uid = item.text(2)  # The text of the node.
+        if level >0 and item != None:
+            uid = item.text(2)  # The text of the nodel
 
         if level == 0:
             action_add = menu.addAction(self.tr("Add Section"))
             action_add.triggered.connect(self.add_section)
+            action_refresh = menu.addAction(self.tr("Refresh"))
+            action_refresh.triggered.connect(self.update_project_tree)
             
         elif level == 1:
             action_del = menu.addAction('Delete')
             action_del.triggered.connect(lambda: self.delete_section(uid))
 
-            menu.addAction(self.tr("Export"))
-        elif level == -1:
             action_refresh = menu.addAction(self.tr("Refresh"))
             action_refresh.triggered.connect(self.update_project_tree)
         
@@ -190,19 +193,34 @@ class Prog(QtGui.QMainWindow):
 
     ## DETAILS OBJECT
 
-    def on_click(self, signal):
+
+    def on_datachange_model(self, signal):
         row = signal.row()  # RETRIEVES ROW OF CELL THAT WAS DOUBLE CLICKED
         column = signal.column()  # RETRIEVES COLUMN OF CELL THAT WAS DOUBLE CLICKED
         cell_dict = self.ui.model.itemData(signal)  # RETURNS DICT VALUE OF SIGNAL
         cell_value = cell_dict.get(0)  # RETRIEVE VALUE FROM DICT
+
+        uid = self.ui.model.itemData(signal.sibling(0, 1)).get(0)
  
         index = signal.sibling(row, 0)
         index_dict = self.ui.model.itemData(index)
         index_value = index_dict.get(0)
-        print(
-            'Row {}, Column {} clicked - value: {}\nColumn 1 contents: {}'.format(row, column, cell_value, index_value))
-    
+        logger.debug(
+            'Edited Row {}, Col {} value: {} index_value: {}, uid: {}'.format(row, column, cell_value, index_value,uid))
+        
+        ## Update the Data model ( self.flight) from the changed done in self.ui_model
+        if self.flight.id == uid:
+            setattr(self.flight, index_value, cell_value)
+        else:
+            for sect in self.flight.sections:
+                if sect.id == uid :
+                    setattr(sect, index_value, cell_value)
+            
+
+
     def populate(self,uid,level):
+        """ Add data in the Table view , via model
+        """
         # MODEL ONLY ACCEPTS STRINGS - MUST CONVERT.
 
         logger.debug("display_properties: " + str(uid))
