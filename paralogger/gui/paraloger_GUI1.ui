@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1502</width>
-    <height>720</height>
+    <width>1314</width>
+    <height>727</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,9 +23,9 @@
       <height>661</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,4">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,2,0,3">
        <item>
         <widget class="QLabel" name="label_project_tree">
          <property name="text">
@@ -52,14 +52,29 @@
        <item>
         <widget class="QTableView" name="tableView"/>
        </item>
-       <item>
-        <widget class="QLabel" name="label_info_bar">
-         <property name="text">
-          <string>info bar</string>
-         </property>
-        </widget>
-       </item>
       </layout>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="main_tabWidget">
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <widget class="QWidget" name="tab_graph">
+        <attribute name="title">
+         <string>Graph</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="tab_table">
+        <attribute name="title">
+         <string>Table</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="tab_3d">
+        <attribute name="title">
+         <string>3D</string>
+        </attribute>
+       </widget>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -69,8 +84,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1502</width>
-     <height>27</height>
+     <width>1314</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

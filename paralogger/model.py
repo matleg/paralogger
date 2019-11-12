@@ -124,6 +124,25 @@ class Flight:
                 df_to_return.append(dataf.df)
         return df_to_return
 
+    def apply_section(self,uid,time_calibrate=5):
+
+        mSection= self.section_by_id(uid)
+        t_start,t_end = mSection.get_start_end()
+        t_start,t_end =float(t_start),float(t_end)
+        mdf = self.get_df_by_position(Position.PILOT)[0]
+        df_plot = mdf.loc[mdf["lat"].notnull()]
+
+        dict_calibration = mSection.set_calibration(df_plot,t_start , t_start + time_calibrate)
+
+        df_plot['pitch'] = df_plot['pitch'] - dict_calibration['pitch']
+        df_plot['roll'] = df_plot['roll'] - dict_calibration['roll']
+
+        mask = (df_plot["time0_s"] > t_start) & (df_plot["time0_s"] <= t_end)
+        df_plot_sel = df_plot.loc[mask].copy()
+
+        return df_plot_sel
+
+
     def add_general_section(self , time_min=None ,time_max=None ):
 
         if not len(self.data)==0:
@@ -138,7 +157,6 @@ class Flight:
             mSection= Sections(time_min,time_max,Kind.MISC)
             self.sections.append(mSection)
             
-            
         else:
             logger.info("Impossible to create section, Data is empty")
 
@@ -147,7 +165,7 @@ class Flight:
 
     def section_by_id(self, uid):
         section_to_return = [i for i in self.sections if i.id == uid]
-        return section_to_return  
+        return section_to_return[0]  
 
 
 
@@ -168,7 +186,7 @@ class Sections:
     def get_start_end(self):
         return (self.start, self.end)
 
-    def get_calibration(self,df, t_start=0 ,t_end =5):
+    def set_calibration(self,df, t_start=0 ,t_end =5):
         mask = (df["time0_s"] > t_start) & (df["time0_s"] <= t_end)
 
 

@@ -15,6 +15,8 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from gui.main_gui import  Ui_MainWindow
 
 from model import timeit, Flight, Sections
+from gui.Tab_3D import Visualizer3D
+from gui.Tab_Graph import generated_layout
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -72,16 +74,11 @@ class Prog(QtGui.QMainWindow):
         self.ui.treeWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.ui.treeWidget.customContextMenuRequested.connect(self.openMenu)
 
-        #self.ui.tableView.itemChanged.connect(self.onTableItemChanged)
-        #self.ui.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.CurrentChanged)
-
-
 
         #setup Qtree
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
 
         #setup table view detail section
-
         self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
         self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
         #self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -129,7 +126,6 @@ class Prog(QtGui.QMainWindow):
 
         with open(log_file_path, 'r') as file:
             log_content = file.read()
-
 
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Information)
@@ -196,6 +192,8 @@ class Prog(QtGui.QMainWindow):
             
         elif level == 1:   # section level
             self.populate(uid,level)
+            self.display_tab_graph(uid)
+
             
 
     def openMenu(self, position):
@@ -233,6 +231,22 @@ class Prog(QtGui.QMainWindow):
         logger.info("add section")
         self.flight.add_general_section()
         self.update_project_tree()
+    
+    ### TAB WIDGET
+    def multiplot_3D(self,uid):
+        df_to_plot = self.flight.apply_section(uid)
+        v = Visualizer3D(self.ui.tab_3d)
+        v.animation(df_to_plot, True)
+
+    def display_tab_graph(self,uid):
+
+        df_to_plot = self.flight.apply_section(uid)
+        mainLayout=generated_layout(df_to_plot)
+
+        
+        self.ui.tab_graph.setLayout(mainLayout)
+
+
         
 
     ## DETAILS OBJECT
@@ -273,7 +287,7 @@ class Prog(QtGui.QMainWindow):
         if level == 0:
             dict_to_display =  vars(self.flight)
         elif level ==1 :
-            dict_to_display = vars(self.flight.section_by_id(uid)[0])
+            dict_to_display = vars(self.flight.section_by_id(uid))
 
 
         for name, value in dict_to_display.items(): 

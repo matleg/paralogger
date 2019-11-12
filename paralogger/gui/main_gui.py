@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'paraloger_GUI1.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,13 +11,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1502, 720)
+        MainWindow.resize(1314, 727)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(9, 9, 1261, 661))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -34,13 +35,26 @@ class Ui_MainWindow(object):
         self.tableView = QtWidgets.QTableView(self.horizontalLayoutWidget)
         self.tableView.setObjectName("tableView")
         self.verticalLayout.addWidget(self.tableView)
-        self.label_info_bar = QtWidgets.QLabel(self.horizontalLayoutWidget)
-        self.label_info_bar.setObjectName("label_info_bar")
-        self.verticalLayout.addWidget(self.label_info_bar)
+        self.verticalLayout.setStretch(1, 2)
+        self.verticalLayout.setStretch(3, 3)
         self.horizontalLayout.addLayout(self.verticalLayout)
+        self.main_tabWidget = QtWidgets.QTabWidget(self.horizontalLayoutWidget)
+        self.main_tabWidget.setObjectName("main_tabWidget")
+        self.tab_graph = QtWidgets.QWidget()
+        self.tab_graph.setObjectName("tab_graph")
+        self.main_tabWidget.addTab(self.tab_graph, "")
+        self.tab_table = QtWidgets.QWidget()
+        self.tab_table.setObjectName("tab_table")
+        self.main_tabWidget.addTab(self.tab_table, "")
+        self.tab_3d = QtWidgets.QWidget()
+        self.tab_3d.setObjectName("tab_3d")
+        self.main_tabWidget.addTab(self.tab_3d, "")
+        self.horizontalLayout.addWidget(self.main_tabWidget)
+        self.horizontalLayout.setStretch(0, 1)
+        self.horizontalLayout.setStretch(1, 4)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1502, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1314, 22))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -70,6 +84,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
+        self.main_tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -77,7 +92,9 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label_project_tree.setText(_translate("MainWindow", "Tree"))
         self.label_object_details.setText(_translate("MainWindow", "Details:"))
-        self.label_info_bar.setText(_translate("MainWindow", "info bar"))
+        self.main_tabWidget.setTabText(self.main_tabWidget.indexOf(self.tab_graph), _translate("MainWindow", "Graph"))
+        self.main_tabWidget.setTabText(self.main_tabWidget.indexOf(self.tab_table), _translate("MainWindow", "Table"))
+        self.main_tabWidget.setTabText(self.main_tabWidget.indexOf(self.tab_3d), _translate("MainWindow", "3D"))
         self.menuFile.setTitle(_translate("MainWindow", "Fi&le"))
         self.menuAbout.setTitle(_translate("MainWindow", "Abo&ut"))
         self.actionOpen.setText(_translate("MainWindow", "&Open"))
