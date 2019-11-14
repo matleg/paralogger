@@ -122,7 +122,6 @@ def ulog_list_data(file_path):
     return df
 
 
-
 def ulog_param(file_path):
     """ Extract all the parameters of the Ulog
         """
@@ -155,11 +154,12 @@ def ulog_to_df(file_path):
     #Dict to list all the interesting parameters to extract
     dict_param_to_get ={'vehicle_attitude' : ['timestamp','q[0]','q[1]','q[2]','q[3]','pitch','roll','yaw','yawspeed' ],
                         'vehicle_local_position' : ['timestamp','x','y','z','ax','ay','az' ],   
-                        'vehicle_gps_position': ['timestamp','time_utc_usec','lat','lon','alt','alt_ellipsoid','hdop','vdop','fix_type','satellites_used' ],
+                        'vehicle_gps_position': ['timestamp','time_utc_usec','lat','lon','alt','hdop','vdop','fix_type','satellites_used' ],
                         'vehicle_air_data' : ['timestamp','baro_alt_meter','baro_temp_celcius','baro_pressure_pa','rho' ] 
     }
 
     df_G = pd.DataFrame(columns=['timestamp'])
+
     # For each cetgory : vehicle_attitude ,vehicle_local_position , etc ..
     for key in dict_param_to_get:
         logger.info("fetching category: " + str(key))
@@ -184,28 +184,48 @@ def ulog_to_df(file_path):
         
         df_G.sort_values('timestamp',inplace=True)
 
+<<<<<<< HEAD:paralogger/import_ulog.py
         #interpolated some misinsg value 
         #euler angle
         df_G['pitch'].interpolate(method='linear',inplace=True)
         df_G['roll'].interpolate(method='linear',inplace=True)
         df_G['yaw'].interpolate(method='linear',inplace=True)
 
-
-        print(df_G.info())
-
-
-        #Created a time 0 column
-     
-        df_G['time0_s']= (df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6  #timestamp are in micro second
-        
-
-        #move time 0 column to the begining of the table
-        time0s = df_G['time0_s']
-        df_G.drop(labels=['time0_s'], axis=1,inplace = True)
-        df_G.insert(1, 'time0_s', time0s)
+=======
+    #interpolated some misinsg value 
+    #euler angle and quaternion
+    df_G['pitch'].interpolate(method='linear',inplace=True)
+    df_G['roll'].interpolate(method='linear',inplace=True)
+    df_G['yaw'].interpolate(method='linear',inplace=True)
+    df_G['q[0]'].interpolate(method='linear',inplace=True)
+    df_G['q[1]'].interpolate(method='linear',inplace=True)
+    df_G['q[2]'].interpolate(method='linear',inplace=True)
+    df_G['q[3]'].interpolate(method='linear',inplace=True)
+>>>>>>> b2b068cbb1d156df41c79e2d582933b4e74381c1:paralogger/import_ulog.py
 
 
-        #df_G.insert(1, 'time0_s',(df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6)
+    ## Create additional data
+    #Created a time 0 column
+    
+    df_G['time0_s']= (df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6  #timestamp are in micro second
+
+    # Compute nb of G
+    df_G['nbG_x'] = df_G['ax'] / gravity 
+    df_G['nbG_y'] = df_G['ay'] / gravity
+    df_G['nbG_z'] = df_G['az'] / gravity
+
+    df_G['nbG_tot'] = np.linalg.norm(df_G[['nbG_x','nbG_y','nbG_z']].values,axis=1)
+
+    #Convert to more convential unit
+    df_G['alt'] = df_G['alt'] / 1e3 #Convert altitude to meter
+
+    #move time 0 column to the begining of the table
+    time0s = df_G['time0_s']
+    df_G.drop(labels=['time0_s'], axis=1,inplace = True)
+    df_G.insert(1, 'time0_s', time0s)
+
+
+    print(df_G.info())
 
     return df_G
 

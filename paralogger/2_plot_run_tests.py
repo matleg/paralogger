@@ -17,7 +17,10 @@ import pyqtgraph.opengl as gl
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b2b068cbb1d156df41c79e2d582933b4e74381c1
 os.environ["DISPLAY"] = ":0"
 
 gravity = 9.80665  # m·s-2
