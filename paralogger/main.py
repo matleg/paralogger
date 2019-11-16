@@ -17,6 +17,7 @@ from model import timeit, Flight, Sections
 from gui.Tab_3D import Visualizer3D
 from gui.Tab_Graph import generated_layout
 from gui.Tab_Table import pandasTableModel
+from gui.Tab_log import QTextEditLogger
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -51,7 +52,7 @@ def config_logger():
 
 logger = config_logger()    
 
-#TODO redirect the expection  in the logger 
+
 
 class Prog(QtGui.QMainWindow):
     
@@ -78,10 +79,19 @@ class Prog(QtGui.QMainWindow):
         #setup Qtree
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
 
+        #set up the log tab
+        logTextBox = QTextEditLogger(self)
+
+        logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(logTextBox)
+        layout_log = QtWidgets.QVBoxLayout()
+        layout_log.addWidget(logTextBox.widget)
+        self.ui.tab_log.setLayout(layout_log)
+
+
         #setup table view detail section
         self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
         self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
-        #self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.ui.model.dataChanged.connect(self.on_datachange_model)
 
      
