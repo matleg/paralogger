@@ -16,6 +16,7 @@ from gui.main_gui import  Ui_MainWindow
 from model import timeit, Flight, Sections
 from gui.Tab_3D import Visualizer3D
 from gui.Tab_Graph import generated_layout
+from gui.Tab_Table import pandasTableModel
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -191,6 +192,7 @@ class Prog(QtGui.QMainWindow):
             
         elif level == 1:   # section level
             self.display_tab_graph(uid)
+            self.display_tab_Table(uid)
             self.populate(uid,level)
 
             
@@ -238,6 +240,26 @@ class Prog(QtGui.QMainWindow):
         v = Visualizer3D(self.ui.tab_3d)
         v.animation(df_to_plot, True)
 
+    def display_tab_Table(self,uid):
+        df_to_plot = self.flight.apply_section(uid)
+
+        model = pandasTableModel(df_to_plot)
+        if len(self.ui.tab_table.children()) > 0:
+            print(" existing")
+            self.ui.tab_table.children()[1].setModel(model)
+        else:
+            mainLayout = QtWidgets.QVBoxLayout()
+            
+            view = QtWidgets.QTableView()
+            view.setModel(model)
+
+            print("")
+            #view.model.
+
+            mainLayout.addWidget(view)
+
+            self.ui.tab_table.setLayout(mainLayout)
+
     def display_tab_graph(self,uid):
 
         df_to_plot = self.flight.apply_section(uid)
@@ -255,24 +277,14 @@ class Prog(QtGui.QMainWindow):
                 # remove it from the gui
                 widgetToRemove.setParent(None)
             layout.addWidget(inside_widget)
-            
 
         else:
-
-
             mainLayout = QtWidgets.QVBoxLayout()
-
             mainLayout.addWidget(inside_widget)
-
             self.ui.tab_graph.setLayout(mainLayout)
         
 
-# for i in reversed(range(layout.count())): 
-#     widgetToRemove = layout.itemAt(i).widget()
-#     # remove it from the layout list
-#     layout.removeWidget(widgetToRemove)
-#     # remove it from the gui
-#     widgetToRemove.setParent(None)
+
         
 
     ## DETAILS OBJECT
@@ -299,6 +311,9 @@ class Prog(QtGui.QMainWindow):
             for sect in self.flight.sections:
                 if sect.id == uid :
                     setattr(sect, index_value, cell_value)
+
+        ## Update tree view:
+        self.update_project_tree()
             
 
 
