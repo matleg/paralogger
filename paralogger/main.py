@@ -11,7 +11,6 @@ import pickle
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 
-
 from gui.main_gui import  Ui_MainWindow
 
 from model import timeit, Flight, Sections
@@ -191,8 +190,8 @@ class Prog(QtGui.QMainWindow):
             self.populate(uid,level)
             
         elif level == 1:   # section level
-            self.populate(uid,level)
             self.display_tab_graph(uid)
+            self.populate(uid,level)
 
             
 
@@ -232,7 +231,8 @@ class Prog(QtGui.QMainWindow):
         self.flight.add_general_section()
         self.update_project_tree()
     
-    ### TAB WIDGET
+    #### TAB WIDGET ACTIONS
+
     def multiplot_3D(self,uid):
         df_to_plot = self.flight.apply_section(uid)
         v = Visualizer3D(self.ui.tab_3d)
@@ -241,12 +241,38 @@ class Prog(QtGui.QMainWindow):
     def display_tab_graph(self,uid):
 
         df_to_plot = self.flight.apply_section(uid)
-        mainLayout=generated_layout(df_to_plot)
+        inside_widget = generated_layout(df_to_plot)
 
+        #empty actual area if exist
+        if len(self.ui.tab_graph.children()) > 0:
+            print("not empty")
+            layout = self.ui.tab_graph.children()[0]
+
+            for i in reversed(range(layout.count())): 
+                widgetToRemove = layout.itemAt(i).widget()
+                # remove it from the layout list
+                layout.removeWidget(widgetToRemove)
+                # remove it from the gui
+                widgetToRemove.setParent(None)
+            layout.addWidget(inside_widget)
+            
+
+        else:
+
+
+            mainLayout = QtWidgets.QVBoxLayout()
+
+            mainLayout.addWidget(inside_widget)
+
+            self.ui.tab_graph.setLayout(mainLayout)
         
-        self.ui.tab_graph.setLayout(mainLayout)
 
-
+# for i in reversed(range(layout.count())): 
+#     widgetToRemove = layout.itemAt(i).widget()
+#     # remove it from the layout list
+#     layout.removeWidget(widgetToRemove)
+#     # remove it from the gui
+#     widgetToRemove.setParent(None)
         
 
     ## DETAILS OBJECT

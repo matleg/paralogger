@@ -216,7 +216,7 @@ class Visualizer3D(object):
         # Created the geometrie
         models_path = os.path.dirname(os.path.abspath(__file__))
         obj = "simple_body.obj"
-        obj_path = os.path.join(models_path, "3D_model", obj)
+        obj_path = os.path.join(models_path,"gui","3D_model", obj)
         self.geom = Create_geom.obj(obj_path)
 
         # create the background grids

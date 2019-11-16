@@ -8,6 +8,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
 import pyqtgraph as pg

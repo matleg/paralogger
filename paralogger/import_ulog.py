@@ -194,10 +194,11 @@ def ulog_to_df(file_path):
     df_G['q[2]'].interpolate(method='linear',inplace=True)
     df_G['q[3]'].interpolate(method='linear',inplace=True)
 
+    #Find first row with quaternion
+    df_G.dropna(subset=['q[0]'], inplace=True)
 
     ## Create additional data
     #Created a time 0 column
-    
     df_G['time0_s']= (df_G['timestamp'] - df_G.iloc[0]['timestamp'])/10**6  #timestamp are in micro second
 
     # Compute nb of G

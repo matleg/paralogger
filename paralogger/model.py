@@ -132,7 +132,9 @@ class Flight:
         mdf = self.get_df_by_position(Position.PILOT)[0]
         df_plot = mdf.loc[mdf["lat"].notnull()]
 
-        dict_calibration = mSection.set_calibration(df_plot,t_start , t_start + time_calibrate)
+        mSection.set_calibration(df_plot,t_start , t_start + time_calibrate)
+        dict_calibration = mSection.get_calibration() 
+
 
         df_plot['pitch'] = df_plot['pitch'] - dict_calibration['pitch']
         df_plot['roll'] = df_plot['roll'] - dict_calibration['roll']
@@ -152,7 +154,7 @@ class Flight:
             if time_min == None:
                 time_min = df['time0_s'].min()
             if time_max == None:
-                time_max = df['time0_s'].min()
+                time_max = df['time0_s'].max()
 
             mSection= Sections(time_min,time_max,Kind.MISC)
             self.sections.append(mSection)
@@ -181,7 +183,7 @@ class Sections:
         self.start = start
         self.end = end
         self.version = 1  # version of the Sections model
-        self.calibrate={"pitch" : 0 , "roll" :0 , "yaw" : 0 }
+        self.calibration = {"pitch" : 0 , "roll" :0 , "yaw" : 0 }
 
     def get_start_end(self):
         return (self.start, self.end)
@@ -194,13 +196,21 @@ class Sections:
         avg_roll = df.loc[mask, 'roll'].mean()
         avg_yaw = df.loc[mask, 'yaw'].mean()
 
+        if (avg_pitch == None or avg_roll == None or avg_yaw == None):
+            #raise CalibrationError("calibration failed")
+            logger.warning("calibration failed")
+
   
         logger.info( " calibrating  from time0_s: " + str(t_start) + "s to : " + str(t_end) + " s" )
         logger.debug( ' avg_pitch :' + str(avg_pitch) + " rad so: " + str(np.rad2deg(avg_pitch)) + " deg")
         logger.debug( ' avg_roll :' + str(avg_roll) + " rad so: " + str(np.rad2deg(avg_roll)) + " deg")
         #logger.debug( ' avg_yaw :' + str(avg_yaw) + " rad so: " + str(np.rad2deg(avg_yaw)) + " deg" + " wanted (deg): "+ str(start_yaw_angle_deg))
-
+        
+        self.calibration = {"pitch" : avg_pitch , "roll" :avg_roll , "yaw" : avg_yaw }
         return {"pitch" : avg_pitch , "roll" :avg_roll , "yaw" : avg_yaw }
+    
+    def get_calibration(self):
+        return self.calibration
 
         
 

@@ -27,8 +27,7 @@ def generated_layout(mdf):
     if len(mdf)>2 :
 
         area = DockArea()
-        mainLayout = QVBoxLayout()
-        mainLayout.addWidget(area)
+
         # Creat the docks
         d1 = Dock("Dock1 - altitude", size=(100, 150), closable=True)  
         d2 = Dock("Dock3 - Pitch",  closable=True)
@@ -76,12 +75,12 @@ def generated_layout(mdf):
         p4.plot(mdf['time0_s'].to_numpy() , yaw, pen=color, name="yaw [deg]")
         d4.addWidget(p4)
     else:
-        mainLayout = QVBoxLayout()
-        no_data_label = QLabel()
-        no_data_label.setText ("No valid data")
-        mainLayout.addWidget(no_data_label)
+        area = QLabel()
+        area.setText ("No valid data")
+
+
 
 
     
-    return mainLayout
+    return area
 
