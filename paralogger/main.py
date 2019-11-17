@@ -267,11 +267,12 @@ class Prog(QtGui.QMainWindow):
 
 
         v = Visualizer3D()
-        data_info_text = QtWidgets.QLabel('Live Data info')
-        mainLayout.addWidget(data_info_text)
+        
+        mainLayout.addWidget(v.mainWidget)
 
         v.animation(df_to_plot, True)
-        self.ui.tab_table.setLayout(mainLayout)
+
+        self.ui.tab_3d.setLayout(mainLayout)
         
 
     def display_tab_Table(self,uid):
