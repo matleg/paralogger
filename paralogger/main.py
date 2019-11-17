@@ -65,7 +65,8 @@ class Prog(QtGui.QMainWindow):
         #set up the log tab
         logTextBox = QTextEditLogger(self)
 
-        logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+        logTextBox.setFormatter(logging.Formatter('"%(asctime)s - %(levelname)s \t- %(module)s \t- %(funcName)s ::  %(message)s"'))
         logging.getLogger().addHandler(logTextBox)
         layout_log = QtWidgets.QVBoxLayout()
         layout_log.addWidget(logTextBox.widget)
