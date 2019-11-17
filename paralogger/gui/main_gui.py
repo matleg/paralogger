@@ -91,18 +91,21 @@ class Ui_MainWindow(object):
         self.actionVersion.setObjectName("actionVersion")
         self.actionSave_as = QtWidgets.QAction(MainWindow)
         self.actionSave_as.setObjectName("actionSave_as")
+        self.actiondebug_open = QtWidgets.QAction(MainWindow)
+        self.actiondebug_open.setObjectName("actiondebug_open")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave_as)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionimport)
         self.menuAbout.addAction(self.actionHelp)
         self.menuAbout.addAction(self.actionVersion)
+        self.menudebug.addAction(self.actiondebug_open)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuAbout.menuAction())
         self.menubar.addAction(self.menudebug.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.main_tabWidget.setCurrentIndex(3)
+        self.main_tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -122,4 +125,5 @@ class Ui_MainWindow(object):
         self.actionHelp.setText(_translate("MainWindow", "&Help"))
         self.actionVersion.setText(_translate("MainWindow", "&Version"))
         self.actionSave_as.setText(_translate("MainWindow", "&Save_as"))
+        self.actiondebug_open.setText(_translate("MainWindow", "debug_open"))
 

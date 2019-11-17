@@ -77,7 +77,7 @@
       <item>
        <widget class="QTabWidget" name="main_tabWidget">
         <property name="currentIndex">
-         <number>3</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab_graph">
          <attribute name="title">
@@ -134,6 +134,7 @@
     <property name="title">
      <string>debug</string>
     </property>
+    <addaction name="actiondebug_open"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAbout"/>
@@ -163,6 +164,11 @@
   <action name="actionSave_as">
    <property name="text">
     <string>&amp;Save_as</string>
+   </property>
+  </action>
+  <action name="actiondebug_open">
+   <property name="text">
+    <string>debug_open</string>
    </property>
   </action>
  </widget>

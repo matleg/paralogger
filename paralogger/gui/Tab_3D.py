@@ -5,6 +5,7 @@
 import itertools
 import os
 import sys
+import pickle
 
 
 import logging
@@ -14,16 +15,22 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from PyQt5.QtCore import QSize
+
+
 from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout,
                              QWidget)
 from pyqtgraph.Qt import QtCore, QtGui
 
-from geometry_modeling import Create_geom
+try:
+    from geometry_modeling import Create_geom
+except :
+    pass
+
+
 
 # import pkg_resources
 
 
-#os.environ["DISPLAY"] = ":0"
 
 # resource_package = __name__
 
@@ -164,13 +171,14 @@ def add_plot(mdf , widget):
 
 
 class Visualizer3D(object):
-    def __init__(self,parent):
+    def __init__(self):
         self.traces = dict()
-        self.app = QtGui.QApplication(sys.argv)
+        #self.app = QtGui.QApplication(sys.argv)
 
         #Main Widget containing everything
-        self.mainWidget= QWidget(parent= parent)
-        self.mainWidget.setGeometry(0, 0, 400,400)
+    
+        self.mainWidget= QWidget()
+        #self.mainWidget.setGeometry(0, 0, 400,400)
         # general layout
         self.layout_general = QVBoxLayout(self.mainWidget)
 
@@ -255,8 +263,11 @@ class Visualizer3D(object):
 
 
     def start(self):
+
         if (sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION"):
-            sys.exit(QtGui.QApplication.instance().exec_())
+           # sys.exit(QtGui.QApplication.instance().exec_())
+           QtGui.QApplication.instance().exec_()
+           print("Exit")
 
     def update(self):
 
@@ -350,8 +361,40 @@ class Visualizer3D(object):
 if __name__ == "__main__":
     # Load dummy file
     # DO NOT WORK
-    with open("model/sample_dict_debug_anim_3D.txt", "r") as inf:
-        dict_from_file = eval(inf.read())
+    import sys
+
+    os.environ["DISPLAY"] = ":0"
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    logger.info('cwd:' + cwd)
+    cwd_parent , _ = os.path.split(cwd)
+    sys.path.insert(0,cwd_parent)
+
+    from PyQt5.QtWidgets import (QApplication, QMainWindow)
+    from geometry_modeling import Create_geom
+
+    file_name = "mflight_plot_V1.pkl"
+
+   
+
+    file_path = os.path.join(cwd_parent, file_name)
+    logger.info('file_path:' + file_path)
+    with open(file_path, 'rb') as pickle_file:
+        flight = pickle.load(pickle_file)
+    main_uid_section = flight.sections[0].id
+    df_to_plot= flight.apply_section(main_uid_section)
+
+    # Temp app
+    app = QApplication(sys.argv)
+    window = QMainWindow()
+    Main_Widget = QWidget()
+    window.setWindowTitle("Animation 3D")
+    window.setGeometry(0, 0, 1400, 1000)
 
     v = Visualizer3D()
-    v.animation(dict_from_file, True)
+
+    window.setCentralWidget(v.mainWidget)
+
+    window.show() # IMPORTANT!!!!! Windows are hidden by default.
+    v.animation(df_to_plot, True)
+    # Start the event loop.
+    app.exec_()

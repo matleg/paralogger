@@ -58,8 +58,19 @@ class Prog(QtGui.QMainWindow):
     
     def __init__(self):
         super().__init__()
+        
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        #set up the log tab
+        logTextBox = QTextEditLogger(self)
+
+        logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(logTextBox)
+        layout_log = QtWidgets.QVBoxLayout()
+        layout_log.addWidget(logTextBox.widget)
+        self.ui.tab_log.setLayout(layout_log)
+        logger.info("--- Start ---")
         
         #Set up variable
         self.flight = None
@@ -69,6 +80,7 @@ class Prog(QtGui.QMainWindow):
         self.ui.actionSave_as.triggered.connect(self.save_pickle_file)
         self.ui.actionVersion.triggered.connect(self.about_popup)
         self.ui.actionHelp.triggered.connect(self.openUrl_help)
+        self.ui.actiondebug_open.triggered.connect(self.debug)
         
 
         self.ui.treeWidget.itemClicked.connect(self.onTreeItemClicked)
@@ -79,26 +91,26 @@ class Prog(QtGui.QMainWindow):
         #setup Qtree
         self.ui.treeWidget.setHeaderLabels(["Name","Kind","Id"])
 
-        #set up the log tab
-        logTextBox = QTextEditLogger(self)
-
-        logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logging.getLogger().addHandler(logTextBox)
-        layout_log = QtWidgets.QVBoxLayout()
-        layout_log.addWidget(logTextBox.widget)
-        self.ui.tab_log.setLayout(layout_log)
-
 
         #setup table view detail section
         self.ui.model = QtGui.QStandardItemModel(self)  # SELECTING THE MODEL - FRAMEWORK THAT HANDLES QUERIES AND EDITS
         self.ui.tableView.setModel(self.ui.model)  # SETTING THE MODEL
         self.ui.model.dataChanged.connect(self.on_datachange_model)
 
+    def debug(self):
+        ''' only use for speed up de developement
+        '''
+        self.open_pickle_file("mflight_plot_V1.pkl")
+
      
 
-    def open_pickle_file(self):
+    def open_pickle_file(self , filename=None):
         logger.debug(" Menu :  open")
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Open pickler File', "", 'Pickle Files (*.pkl)')
+
+        if filename == False:
+            filename = QtGui.QFileDialog.getOpenFileName(self, 'Open pickler File', "", 'Pickle Files (*.pkl)')
+
+        
         if isinstance(filename, tuple):
             filename = filename[0]
         if filename:
@@ -201,8 +213,11 @@ class Prog(QtGui.QMainWindow):
             self.populate(uid,level)
             
         elif level == 1:   # section level
+            #update all tabs
             self.display_tab_graph(uid)
             self.display_tab_Table(uid)
+            self.display_tab_3D(uid)
+
             self.populate(uid,level)
 
             
@@ -245,10 +260,19 @@ class Prog(QtGui.QMainWindow):
     
     #### TAB WIDGET ACTIONS
 
-    def multiplot_3D(self,uid):
+    def display_tab_3D(self,uid):
         df_to_plot = self.flight.apply_section(uid)
-        v = Visualizer3D(self.ui.tab_3d)
+        
+        mainLayout = QtWidgets.QVBoxLayout()
+
+
+        v = Visualizer3D()
+        data_info_text = QtWidgets.QLabel('Live Data info')
+        mainLayout.addWidget(data_info_text)
+
         v.animation(df_to_plot, True)
+        self.ui.tab_table.setLayout(mainLayout)
+        
 
     def display_tab_Table(self,uid):
         df_to_plot = self.flight.apply_section(uid)
