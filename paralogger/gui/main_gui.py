@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -28,7 +29,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -51,16 +52,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.main_tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.main_tabWidget.setObjectName("main_tabWidget")
-        self.tab_graph = QtWidgets.QWidget()
+        self.tab_graph = QtWidgets.QWidget(self.centralwidget)
         self.tab_graph.setObjectName("tab_graph")
         self.main_tabWidget.addTab(self.tab_graph, "")
-        self.tab_table = QtWidgets.QWidget()
+        self.tab_table = QtWidgets.QWidget(self.centralwidget)
         self.tab_table.setObjectName("tab_table")
         self.main_tabWidget.addTab(self.tab_table, "")
-        self.tab_3d = QtWidgets.QWidget()
+        self.tab_3d = QtWidgets.QWidget(self.centralwidget)
         self.tab_3d.setObjectName("tab_3d")
         self.main_tabWidget.addTab(self.tab_3d, "")
-        self.tab_log = QtWidgets.QWidget()
+        self.tab_log = QtWidgets.QWidget(self.centralwidget)
         self.tab_log.setObjectName("tab_log")
         self.main_tabWidget.addTab(self.tab_log, "")
         self.horizontalLayout.addWidget(self.main_tabWidget)
@@ -126,4 +127,3 @@ class Ui_MainWindow(object):
         self.actionVersion.setText(_translate("MainWindow", "&Version"))
         self.actionSave_as.setText(_translate("MainWindow", "&Save_as"))
         self.actiondebug_open.setText(_translate("MainWindow", "debug_open"))
-
