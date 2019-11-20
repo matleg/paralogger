@@ -72,6 +72,7 @@ class Prog(QtGui.QMainWindow):
 
         #Set up variable
         self.flight = None
+        self.visualizer_3d = None
 
         #add Action
         self.ui.actionOpen.triggered.connect(self.open_pickle_file)
@@ -254,14 +255,14 @@ class Prog(QtGui.QMainWindow):
 
         # mainLayout = QtWidgets.QVBoxLayout()
 
-        v = Visualizer3D(self.ui.tab_3d)
+        self.visualizer_3d = Visualizer3D(self.ui.tab_3d)
+        # self.setCentralWidget(self.ui.main_tabWidget)
 
         # mainLayout.addWidget(v.mainWidget)
 
-        v.animation(df_to_plot, True)
+        self.visualizer_3d.animation(df_to_plot, True, timer=self.timer)
 
-        self.ui.tab_3d.setLayout(v.layout_general)
-        # self.setCentralWidget(self.ui.main_tabWidget)
+        self.ui.tab_3d.setLayout(self.visualizer_3d.layout_general)
 
     def display_tab_Table(self, uid):
         df_to_plot = self.flight.apply_section(uid)

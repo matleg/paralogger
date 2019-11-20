@@ -194,7 +194,7 @@ class Visualizer3D(object):
 
         #self.mainWidget.setLayout(self.layout)
 
-        # self.timer = QtCore.QTimer(self.mainWidget)
+        self.timer = QtCore.QTimer(self.mainWidget)
 
         #self.w = gl.GLViewWidget()
         self.w.opts["distance"] = 160
@@ -307,6 +307,8 @@ class Visualizer3D(object):
             self.w.addItem(plt)
             self.track_is_ploted = True
 
+
+
     def animation(self, mdata, plot_track, timer=None):
 
         print("total records:" + str(len(mdata)))
@@ -320,14 +322,14 @@ class Visualizer3D(object):
         self.custom = add_plot(mdata, self.plots)
 
         if not timer:
-            timer = QtCore.QTimer(self.mainWidget)
-        timer.timeout.connect(self.update)
+            self.timer = QtCore.QTimer(self.mainWidget)
+        self.timer.timeout.connect(self.update)
 
         self.calculate_average_time()
 
         print("step time ms:", self.step_interval)
 
-        timer.start(self.step_interval * 1000)  # because timer.start is in ms not in s
+        self.timer.start(self.step_interval * 1000)  # because timer.start is in ms not in s
 
         #self.start()
 
@@ -363,19 +365,9 @@ if __name__ == "__main__":
     window.setWindowTitle("Animation 3D")
     window.setGeometry(0, 0, 1400, 1000)
 
-    window.main_tabWidget = QTabWidget(Main_Widget)
-    window.main_tabWidget.setObjectName("main_tabWidget")
-    window.tab_graph = QWidget(Main_Widget)
-    window.tab_graph.setObjectName("tab_graph")
-    window.main_tabWidget.addTab(window.tab_graph, "")
-    window.tab_3d = QWidget()
-    window.tab_3d.setObjectName("tab_3d")
-    window.main_tabWidget.addTab(window.tab_3d, "")
-    # window.setCentralWidget(Main_Widget)
+    v = Visualizer3D(Main_Widget)
 
-    v = Visualizer3D(window.tab_3d)
-
-    window.setCentralWidget(window.main_tabWidget)
+    window.setCentralWidget(Main_Widget)
 
     window.show()  # IMPORTANT!!!!! Windows are hidden by default.
     v.animation(df_to_plot, True)
